@@ -1,21 +1,34 @@
 #!/bin/bash
 
+# Source utility functions
 source "$(dirname "$0")/utils.sh"
 
-NEW_MAC_IP="$1"
-USERNAME="$2"
-DRY_RUN="$3"
+# Check if required environment variables are set
+check_required_vars "NEW_MAC_IP" "USERNAME" "OUTPUT_DIR" "EXCLUDE_FILE"
 
-# Test SSH connection
-echo "Testing SSH connection to ${USERNAME}@${NEW_MAC_IP}..."
-if ssh -q -o BatchMode=yes -o ConnectTimeout=5 "${USERNAME}@${NEW_MAC_IP}" exit; then
-	echo "SSH connection successful."
-else
-	echo "Error: Unable to establish SSH connection. Please check your network and ensure SSH is enabled on the target Mac."
-	exit 1
+log_info "Preparing to sync home folder to ${NEW_MAC_IP}..."
+log_info "You will be prompted to enter the password for ${USERNAME} on the new Mac."
+
+# Prepare rsync command
+rsync_cmd="rsync -az"
+
+# Add verbose flag if VERBOSE is true
+if [[ "${VERBOSE}" = true ]]; then
+	rsync_cmd+="v"
 fi
 
-# Proceed with rsync if SSH connection is successful
-echo "Starting rsync operation..."
-run_command rsync -avz --progress --exclude=".Trash" --exclude="Library/Caches" \
-	~/ "${USERNAME}@${NEW_MAC_IP}:~/" "${DRY_RUN}"
+# Add exclude file to rsync command
+rsync_cmd+=" --exclude-from=\"${EXCLUDE_FILE}\""
+
+rsync_cmd+=" ~/ \"${USERNAME}@${NEW_MAC_IP}:~/\""
+
+if [[ "${DRY_RUN}" = true ]]; then
+	log_info "[DRY RUN] Previewing sync operation..."
+	rsync_cmd+=" --dry-run"
+	eval "${rsync_cmd}"
+	log_info "[DRY RUN] Sync preview complete. No changes were made."
+else
+	log_info "Starting home folder sync..."
+	eval "${rsync_cmd}"
+	log_info "Home folder sync complete!"
+fi

@@ -1,0 +1,15 @@
+# System and hidden files
+.DS_Store
+.Trash
+.CFUserTextEncoding
+
+# Cloud storage
+Google Drive
+Dropbox
+iCloud
+
+# # Temporary and backup files
+# *.tmp
+# *.bak
+# *.swp
+# *.log

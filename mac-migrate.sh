@@ -15,22 +15,39 @@ INSTALL_APPS=false
 MIGRATE_SETTINGS=false
 DRY_RUN=false
 OUTPUT_DIR=""
+EXCLUDE_FILE=""
+VERBOSE=false
+
+# Default exclude file path
+DEFAULT_EXCLUDE_FILE="${SCRIPT_DIR}/config/sync_home.gitignore"
 
 # Function to display usage
 usage() {
-  echo "Usage: $0 [OPTIONS]"
-  echo "Migrate data and settings from one MacBook to another."
-  echo
-  echo "Options:"
-  echo "  -i, --ip IP_ADDRESS       IP address of the new MacBook"
-  echo "  -u, --username USERNAME   Username on both machines"
-  echo "  -s, --sync-home           Sync home folder"
-  echo "  -e, --export-apps         Export list of installed apps"
-  echo "  -a, --install-apps        Install apps on the new MacBook"
-  echo "  -m, --migrate-settings    Migrate settings"
-  echo "  -d, --dry-run             Perform a dry run without making changes"
-  echo "  -o, --output-dir DIR      Specify output directory for artifacts"
-  echo "  -h, --help                Display this help message"
+  cat <<EOF
+Usage: $0 [OPTIONS]
+Migrate data and settings from one MacBook to another.
+
+Sync home options:
+  -s, --sync-home           Sync home folder
+  -i, --ip IP_ADDRESS       IP address of the new MacBook
+  -u, --username USERNAME   Username on both machines
+  -x, --exclude-file FILE   Specify exclude file for rsync (default: ${DEFAULT_EXCLUDE_FILE})
+
+Export apps options:
+  -e, --export-apps         Export list of installed apps
+
+Install apps options:
+  -a, --install-apps        Install apps on the new MacBook
+
+Migrate settings options:
+  -m, --migrate-settings    Migrate settings
+
+Common options:
+  -o, --output-dir DIR      Specify output directory for artifacts
+  -d, --dry-run             Perform a dry run without making changes
+  -v, --verbose             Enable verbose output
+  -h, --help                Display this help message
+EOF
   exit 1
 }
 
@@ -69,6 +86,14 @@ while [[ $# -gt 0 ]]; do
     OUTPUT_DIR="$2"
     shift 2
     ;;
+  -x | --exclude-file)
+    EXCLUDE_FILE="$2"
+    shift 2
+    ;;
+  -v | --verbose)
+    VERBOSE=true
+    shift
+    ;;
   -h | --help) usage ;;
   *)
     echo "Unknown option: $1"
@@ -101,19 +126,31 @@ fi
 
 mkdir -p "${OUTPUT_DIR}"
 log_info "Using output directory: ${OUTPUT_DIR}"
+
+# If no exclude file is specified, use the default
+if [[ -z ${EXCLUDE_FILE} ]]; then
+  EXCLUDE_FILE="${DEFAULT_EXCLUDE_FILE}"
+  log_info "Using default exclude file: ${EXCLUDE_FILE}"
+fi
+
+export DRY_RUN
 export OUTPUT_DIR
+export EXCLUDE_FILE
+export VERBOSE
 
 # Main migration process
 log_info "Starting MacBook migration..."
 
-if [[ ${SYNC_HOME} == true ]]; then
-  log_info "Syncing home folder..."
-  bash "${SCRIPT_DIR}/src/sync_home.sh" "${NEW_MAC_IP}" "${USERNAME}" "${DRY_RUN}"
-fi
-
 if ${EXPORT_APPS}; then
   log_info "Exporting apps list..."
   bash "${SCRIPT_DIR}/src/export_apps.sh"
+fi
+
+if [[ ${SYNC_HOME} == true ]]; then
+  log_info "Syncing home folder..."
+  export NEW_MAC_IP
+  export USERNAME
+  bash "${SCRIPT_DIR}/src/sync_home.sh"
 fi
 
 if ${INSTALL_APPS}; then
