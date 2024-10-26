@@ -1,7 +1,39 @@
+###########################################
+# rsync exclude patterns
+#
+# Taking into consideration that rsync is used to sync the home folder,
+# - patterns with / are matched against the full path
+# - patterns without / are matched against the filename only
+###########################################
+
 # System and hidden files
 .DS_Store
 .Trash
+.local/share/Trash
 .CFUserTextEncoding
+/Library/Logs/
+/Library/Keychains
+
+# iCloud syncronization files
+/Library/Application Support/iCloud
+/Library/Application Support/MobileSync/Backup/
+/Library/Mobile Documents/
+/Library/Containers/com.apple.CloudDocs.iCloudDriveFileProvider
+/Library/Caches/com.apple.iCloudHelper
+/Library/Preferences/MobileMeAccounts.plist
+/Library/Preferences/com.apple.iCloud.plist
+/Library/Preferences/com.apple.CloudKit.plist
+/Library/Application Support/CloudDocs
+/Library/Application Support/CloudKit
+
+# Google Drive, Dropbox, etc. syncronization files
+/Library/CloudStorage/
+
+# JumpCloud files
+/Library/Application Support/JumpCloud-Remote-Assist
+/Library/Preferences/com.jumpcloud.assist-app.plist
+/Library/Preferences/com.jumpcloud.serviceenroller.plist
+/Library/Preferences/com.jumpcloud.jcagent-tray.plist
 
 # Cloud storage
 Google Drive
