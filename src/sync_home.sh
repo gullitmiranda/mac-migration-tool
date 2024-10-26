@@ -30,45 +30,51 @@ rsync_cmd+=" ~/ \"${USERNAME}@${NEW_MAC_IP}:~/\""
 
 if [[ ${DRY_RUN} == true ]]; then
 	log_info "[DRY RUN] Previewing sync operation..."
-	run_command eval "${rsync_cmd} --dry-run" >"${RSYNC_LOG}" 2>&1
-	log_info "[DRY RUN] Sync preview complete. No changes were made."
+	rsync_cmd+=" --dry-run"
+fi
+
+# Run the rsync command and capture the output and exit status
+if ! run_command eval "${rsync_cmd}" >"${RSYNC_LOG}" 2>&1; then
+	log_error "Home folder sync encountered errors. Check ${RSYNC_LOG} for details."
+
+	# Display the last few lines of the log file, which often contain error messages
+	log_error "Last few lines of the log file:"
+	tail -n 10 "${RSYNC_LOG}" | while IFS= read -r line; do
+		log_error "  ${line}"
+	done || true
+
+	# Check for specific error messages and provide more informative output
+	if grep -q "Too many authentication failures" "${RSYNC_LOG}"; then
+		log_error "Authentication failed. Please check your SSH key or password and try again."
+	elif grep -q "connection unexpectedly closed" "${RSYNC_LOG}"; then
+		log_error "Connection was unexpectedly closed. Please check your network connection and try again."
+	fi
+
+	exit 1
 else
-	log_info "Starting home folder sync..."
-
-	# Run the rsync command and capture the output
-	if run_command eval "${rsync_cmd}" >"${RSYNC_LOG}" 2>&1; then
-		log_info "Home folder sync completed successfully!"
-
-		# Extract and display statistics
-		read -r TOTAL_FILES < <(grep "Number of files transferred" "${RSYNC_LOG}" | awk '{print $5}') || true
-		TOTAL_FILES=${TOTAL_FILES:-N/A}
-		read -r TOTAL_SIZE < <(grep "Total transferred file size" "${RSYNC_LOG}" | awk '{print $5, $6}') || true
-		TOTAL_SIZE=${TOTAL_SIZE:-N/A}
-
-		log_info "Total files transferred: ${TOTAL_FILES}"
-		log_info "Total data transferred: ${TOTAL_SIZE}"
-
-		# Display some of the transferred files (limit to 10 for brevity)
-		log_info "Sample of transferred files:"
-		while IFS= read -r file; do
-			log_info "  - ${file}"
-		done < <(grep '^>f' "${RSYNC_LOG}" | head -n 10 | sed 's/^>f[^ ]* //' || true)
-
-		if [[ $(grep -c '^>f' "${RSYNC_LOG}" || true) -gt 10 ]]; then
-			log_info "  ... and more. Check ${RSYNC_LOG} for full details."
-		fi
+	if [[ ${DRY_RUN} == true ]]; then
+		log_info "[DRY RUN] Sync preview completed successfully. No changes were made."
 	else
-		log_error "Home folder sync encountered errors. Check ${RSYNC_LOG} for details."
+		log_info "Home folder sync completed successfully!"
+	fi
 
-		# Display some of the errors (limit to 5 for brevity)
-		log_error "Sample of errors encountered:"
-		while read -r error; do
-			log_error "  - ${error}"
-		done < <(grep 'rsync:' "${RSYNC_LOG}" | head -n 5 || true)
+	# Extract and display statistics
+	read -r TOTAL_FILES < <(grep "Number of files transferred" "${RSYNC_LOG}" | awk '{print $5}') || true
+	TOTAL_FILES=${TOTAL_FILES:-N/A}
+	read -r TOTAL_SIZE < <(grep "Total transferred file size" "${RSYNC_LOG}" | awk '{print $5, $6}') || true
+	TOTAL_SIZE=${TOTAL_SIZE:-N/A}
 
-		if [[ $(grep -c 'rsync:' "${RSYNC_LOG}" || true) -gt 5 ]]; then
-			log_error "  ... and more. Check ${RSYNC_LOG} for full error list."
-		fi
+	log_info "Total files transferred: ${TOTAL_FILES}"
+	log_info "Total data transferred: ${TOTAL_SIZE}"
+
+	# Display some of the transferred files (limit to 10 for brevity)
+	log_info "Sample of transferred files:"
+	grep '^>f' "${RSYNC_LOG}" | head -n 10 | sed 's/^>f[^ ]* //' | while IFS= read -r file; do
+		log_info "  - ${file}"
+	done || true
+
+	if [[ $(grep -c '^>f' "${RSYNC_LOG}" || true) -gt 10 ]]; then
+		log_info "  ... and more. Check ${RSYNC_LOG} for full details."
 	fi
 fi
 
