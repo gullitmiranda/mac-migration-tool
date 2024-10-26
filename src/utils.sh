@@ -26,3 +26,18 @@ run_command() {
 		"${cmd[@]}"
 	fi
 }
+
+check_required_vars() {
+	local missing_vars=()
+	for var in "$@"; do
+		if [[ -z "${!var}" ]]; then
+			missing_vars+=("$var")
+		fi
+	done
+
+	if [[ ${#missing_vars[@]} -gt 0 ]]; then
+		log_error "The following required environment variables are not set: ${missing_vars[*]}"
+		log_error "Please run this script through the main mac-migrate.sh script."
+		exit 1
+	fi
+}

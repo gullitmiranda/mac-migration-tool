@@ -10,11 +10,8 @@ export_brew() {
 	run_command brew bundle dump --all --describe --no-vscode --file="${output_file}" --force
 }
 
-# Check if OUTPUT_DIR is set
-if [[ -z "${OUTPUT_DIR}" ]]; then
-	log_error "OUTPUT_DIR is not set. Please run this script through the main mac-migrate.sh script."
-	exit 1
-fi
+# Check if required environment variables are set
+check_required_vars "OUTPUT_DIR"
 
 # Export Homebrew packages and Mac App Store apps
 export_brew "${OUTPUT_DIR}/Brewfile"
