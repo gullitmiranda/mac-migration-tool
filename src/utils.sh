@@ -23,7 +23,7 @@ log_error() {
 run_command() {
 	local cmd=("$@")
 
-	if [[ "${VERBOSE}" == "true" ]]; then
+	if [[ ${VERBOSE} == "true" ]]; then
 		echo "Run: ${cmd[*]}"
 	fi
 

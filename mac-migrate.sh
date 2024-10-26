@@ -21,6 +21,9 @@ VERBOSE=false
 # Default exclude file path
 DEFAULT_EXCLUDE_FILE="${SCRIPT_DIR}/config/sync_home.gitignore"
 
+# State file to track migration progress
+STATE_FILE="${OUTPUT_DIR}/migration_state.txt"
+
 # Function to display usage
 usage() {
 	cat <<EOF
@@ -51,6 +54,46 @@ Common options:
   -h, --help                Display this help message
 EOF
 	exit 1
+}
+
+# Function to update state
+update_state() {
+	echo "$1" >>"${STATE_FILE}"
+}
+
+# Function to check if a step has been completed
+is_step_completed() {
+	grep -q "^$1$" "${STATE_FILE}" 2>/dev/null
+}
+
+# Function to resume migration
+resume_migration() {
+	if [[ ! -f ${STATE_FILE} ]]; then
+		log_info "No previous migration state found. Starting fresh migration."
+		return
+	fi
+
+	log_info "Resuming previous migration..."
+
+	if is_step_completed "EXPORT_APPS"; then
+		log_info "Skipping app export (already completed)"
+		EXPORT_APPS=false
+	fi
+
+	if is_step_completed "SYNC_HOME"; then
+		log_info "Skipping home folder sync (already completed)"
+		SYNC_HOME=false
+	fi
+
+	if is_step_completed "INSTALL_APPS"; then
+		log_info "Skipping app installation (already completed)"
+		INSTALL_APPS=false
+	fi
+
+	if is_step_completed "MIGRATE_SETTINGS"; then
+		log_info "Skipping settings migration (already completed)"
+		MIGRATE_SETTINGS=false
+	fi
 }
 
 # Parse command-line arguments
@@ -117,16 +160,22 @@ if [[ -z ${OUTPUT_DIR} ]]; then
 	OUTPUT_DIR=$(mktemp -d /tmp/mac-migrate.XXXXXX)
 	log_info "No output directory specified. Using temporary directory: ${OUTPUT_DIR}"
 elif [[ -d ${OUTPUT_DIR} ]]; then
-	read -p "Output directory ${OUTPUT_DIR} already exists. Do you want to override it? (y/n) " -n 1 -r
-	echo
-	if [[ ! ${REPLY} =~ ^[Yy]$ ]]; then
-		log_error "Aborting due to existing output directory."
-		exit 1
+	if [[ -f "${OUTPUT_DIR}/migration_state.txt" ]]; then
+		log_info "Existing migration state found in ${OUTPUT_DIR}. Resuming migration."
+	else
+		read -p "Output directory ${OUTPUT_DIR} already exists. Do you want to override it? (y/n) " -n 1 -r
+		echo
+		if [[ ! ${REPLY} =~ ^[Yy]$ ]]; then
+			log_error "Aborting due to existing output directory."
+			exit 1
+		fi
+		rm -rf "${OUTPUT_DIR}"
+		mkdir -p "${OUTPUT_DIR}"
 	fi
-	rm -rf "${OUTPUT_DIR}"
+else
+	mkdir -p "${OUTPUT_DIR}"
 fi
 
-mkdir -p "${OUTPUT_DIR}"
 log_info "Using output directory: ${OUTPUT_DIR}"
 
 # If no exclude file is specified, use the default
@@ -140,12 +189,20 @@ export OUTPUT_DIR
 export EXCLUDE_FILE
 export VERBOSE
 
+# Initialize or resume migration
+if [[ -f ${STATE_FILE} ]]; then
+	resume_migration
+else
+	: >"${STATE_FILE}" # Create empty state file
+fi
+
 # Main migration process
 log_info "Starting MacBook migration..."
 
 if ${EXPORT_APPS}; then
 	log_info "Exporting apps list..."
 	bash "${SCRIPT_DIR}/src/export_apps.sh"
+	update_state "EXPORT_APPS"
 fi
 
 if [[ ${SYNC_HOME} == true ]]; then
@@ -153,6 +210,7 @@ if [[ ${SYNC_HOME} == true ]]; then
 	export NEW_MAC_IP
 	export USERNAME
 	bash "${SCRIPT_DIR}/src/sync_home.sh"
+	update_state "SYNC_HOME"
 fi
 
 if ${INSTALL_APPS}; then
@@ -162,11 +220,13 @@ if ${INSTALL_APPS}; then
 	else
 		run_command ssh "${USERNAME}@${NEW_MAC_IP}" 'bash -s' <"${SCRIPT_DIR}/src/install_apps.sh"
 	fi
+	update_state "INSTALL_APPS"
 fi
 
 if ${MIGRATE_SETTINGS}; then
 	log_info "Migrating settings..."
 	run_command bash "${SCRIPT_DIR}/src/migrate_settings.sh"
+	update_state "MIGRATE_SETTINGS"
 fi
 
 log_info "Migration complete!"
