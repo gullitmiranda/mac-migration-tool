@@ -23,7 +23,7 @@ log_error() {
 run_command() {
 	local cmd=("$@")
 
-	if [[ "${VERBOSE}" = true ]]; then
+	if [[ "${VERBOSE}" == "true" ]]; then
 		echo "Run: ${cmd[*]}"
 	fi
 
@@ -33,8 +33,8 @@ run_command() {
 check_required_vars() {
 	local missing_vars=()
 	for var in "$@"; do
-		if [[ -z "${!var}" ]]; then
-			missing_vars+=("$var")
+		if [[ -z ${!var} ]]; then
+			missing_vars+=("${var}")
 		fi
 	done
 
