@@ -14,6 +14,7 @@ EXPORT_APPS=false
 INSTALL_APPS=false
 MIGRATE_SETTINGS=false
 DRY_RUN=false
+OUTPUT_DIR=""
 
 # Function to display usage
 usage() {
@@ -28,6 +29,7 @@ usage() {
   echo "  -a, --install-apps        Install apps on the new MacBook"
   echo "  -m, --migrate-settings    Migrate settings"
   echo "  -d, --dry-run             Perform a dry run without making changes"
+  echo "  -o, --output-dir DIR      Specify output directory for artifacts"
   echo "  -h, --help                Display this help message"
   exit 1
 }
@@ -63,6 +65,10 @@ while [[ $# -gt 0 ]]; do
     DRY_RUN=true
     shift
     ;;
+  -o | --output-dir)
+    OUTPUT_DIR="$2"
+    shift 2
+    ;;
   -h | --help) usage ;;
   *)
     echo "Unknown option: $1"
@@ -78,6 +84,24 @@ if [[ -z ${NEW_MAC_IP} || -z ${USERNAME} ]]; then
   log_info "To get the username, run: whoami"
   usage
 fi
+
+# Handle output directory
+if [[ -z ${OUTPUT_DIR} ]]; then
+  OUTPUT_DIR=$(mktemp -d /tmp/mac-migrate.XXXXXX)
+  log_info "No output directory specified. Using temporary directory: ${OUTPUT_DIR}"
+elif [[ -d ${OUTPUT_DIR} ]]; then
+  read -p "Output directory ${OUTPUT_DIR} already exists. Do you want to override it? (y/n) " -n 1 -r
+  echo
+  if [[ ! ${REPLY} =~ ^[Yy]$ ]]; then
+    log_error "Aborting due to existing output directory."
+    exit 1
+  fi
+  rm -rf "${OUTPUT_DIR}"
+fi
+
+mkdir -p "${OUTPUT_DIR}"
+log_info "Using output directory: ${OUTPUT_DIR}"
+export OUTPUT_DIR
 
 # Main migration process
 log_info "Starting MacBook migration..."
