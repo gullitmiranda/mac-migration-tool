@@ -27,10 +27,12 @@ usage() {
 Usage: $0 [OPTIONS]
 Migrate data and settings from one MacBook to another.
 
-Sync home options:
-  -s, --sync-home           Sync home folder
+Required options:
   -i, --ip IP_ADDRESS       IP address of the new MacBook
   -u, --username USERNAME   Username on both machines
+
+Sync home options:
+  -s, --sync-home           Sync home folder
   -x, --exclude-file FILE   Specify exclude file for rsync (default: ${DEFAULT_EXCLUDE_FILE})
 
 Export apps options:
