@@ -37,6 +37,11 @@ Before running the migration tool, you need to prepare the new Mac with these mi
    - Go to System Preferences > Sharing
    - Check the box next to "Remote Login"
    - Make note of the IP address shown (e.g., 192.168.68.106)
+   - Disable the firewall in both machines
+   - Testing the connection:
+     ```bash
+     ssh gullitmiranda@192.168.68.106
+     ```
 
 2. Set up 1Password (recommended):
 
