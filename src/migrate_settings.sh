@@ -6,14 +6,29 @@ NEW_MAC_IP="$1"
 USERNAME="$2"
 DRY_RUN="$3"
 
-# Sync SSH keys
-run_command rsync -avz ~/.ssh/ "${USERNAME}@${NEW_MAC_IP}:~/.ssh/" "$DRY_RUN"
+log_info "Migrating settings to ${USERNAME}@${NEW_MAC_IP}..."
 
-# Sync Git configuration
-run_command rsync -avz ~/.gitconfig "${USERNAME}@${NEW_MAC_IP}:~/.gitconfig" "$DRY_RUN"
+# Test SSH connection
+if ! ssh -q -o BatchMode=yes -o ConnectTimeout=5 "${USERNAME}@${NEW_MAC_IP}" exit; then
+	log_error "Unable to establish SSH connection. Please check your network and ensure SSH is enabled on the target Mac."
+	exit 1
+fi
 
-# Sync Bash/Zsh history and configuration
-run_command rsync -avz ~/.bash_history "${USERNAME}@${NEW_MAC_IP}:~/.bash_history" "$DRY_RUN"
-run_command rsync -avz ~/.zsh_history "${USERNAME}@${NEW_MAC_IP}:~/.zsh_history" "$DRY_RUN"
-run_command rsync -avz ~/.bashrc "${USERNAME}@${NEW_MAC_IP}:~/.bashrc" "$DRY_RUN"
-run_command rsync -avz ~/.zshrc "${USERNAME}@${NEW_MAC_IP}:~/.zshrc" "$DRY_RUN"
+# List of settings files to migrate
+SETTINGS_FILES=(
+	".zshrc"
+	".vimrc"
+	".gitconfig"
+	".ssh/config"
+)
+
+for file in "${SETTINGS_FILES[@]}"; do
+	if [[ -f "${HOME}/${file}" ]]; then
+		log_info "Migrating ${file}..."
+		run_command scp "${HOME}/${file}" "${USERNAME}@${NEW_MAC_IP}:~/${file}" "${DRY_RUN}"
+	else
+		log_warning "File ${file} not found, skipping..."
+	fi
+done
+
+log_info "Settings migration complete."

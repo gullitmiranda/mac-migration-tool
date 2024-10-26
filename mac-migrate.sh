@@ -1,7 +1,10 @@
 #!/bin/bash
 
+# Get the directory of the script
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Source utility functions
-source "$(dirname "$0")/src/utils.sh"
+source "${SCRIPT_DIR}/src/utils.sh"
 
 # Default values
 NEW_MAC_IP=""
@@ -69,36 +72,38 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Check if required parameters are provided
-if [[ -z "$NEW_MAC_IP" || -z "$USERNAME" ]]; then
+if [[ -z ${NEW_MAC_IP} || -z ${USERNAME} ]]; then
   log_error "Error: IP address and username are required."
+  log_info "To get the IP address, run: ifconfig | grep 'inet ' | grep -v 127.0.0.1 | awk '{print $2}'"
+  log_info "To get the username, run: whoami"
   usage
 fi
 
 # Main migration process
 log_info "Starting MacBook migration..."
 
-if $SYNC_HOME; then
+if [[ ${SYNC_HOME} == true ]]; then
   log_info "Syncing home folder..."
-  run_command "./src/sync_home.sh" "$NEW_MAC_IP" "$USERNAME" "$DRY_RUN"
+  bash "${SCRIPT_DIR}/src/sync_home.sh" "${NEW_MAC_IP}" "${USERNAME}" "${DRY_RUN}"
 fi
 
-if $EXPORT_APPS; then
+if ${EXPORT_APPS}; then
   log_info "Exporting apps list..."
-  run_command "./src/export_apps.sh" "$DRY_RUN"
+  bash "${SCRIPT_DIR}/src/export_apps.sh" "${DRY_RUN}"
 fi
 
-if $INSTALL_APPS; then
+if ${INSTALL_APPS}; then
   log_info "Installing apps on new Mac..."
-  if [ "$DRY_RUN" = false ]; then
-    ssh "${USERNAME}@${NEW_MAC_IP}" 'bash -s' <./src/install_apps.sh
+  if [[ "${DRY_RUN}" = false ]]; then
+    ssh "${USERNAME}@${NEW_MAC_IP}" 'bash -s' <"${SCRIPT_DIR}/src/install_apps.sh"
   else
     log_info "[DRY RUN] Would run install_apps.sh on the new Mac"
   fi
 fi
 
-if $MIGRATE_SETTINGS; then
+if ${MIGRATE_SETTINGS}; then
   log_info "Migrating settings..."
-  run_command "./src/migrate_settings.sh" "$NEW_MAC_IP" "$USERNAME" "$DRY_RUN"
+  bash "${SCRIPT_DIR}/src/migrate_settings.sh" "${NEW_MAC_IP}" "${USERNAME}" "${DRY_RUN}"
 fi
 
 log_info "Migration complete!"

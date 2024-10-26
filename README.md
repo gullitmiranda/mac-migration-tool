@@ -33,16 +33,19 @@ This tool is ideal for power users, developers, and anyone who wants more contro
 Before running the migration tool, you need to prepare the new Mac with these minimal steps:
 
 1. Enable Remote Login (SSH):
+
    - Go to System Preferences > Sharing
    - Check the box next to "Remote Login"
    - Make note of the IP address shown (e.g., 192.168.68.106)
 
 2. Set up 1Password (recommended):
+
    - Download and install 1Password from the official website or the App Store
    - Sign in to your 1Password account
    - This will help you easily access your passwords and other sensitive information during the migration process
 
 3. Sign in to iCloud:
+
    - Go to System Preferences > Apple ID
    - Sign in with your Apple ID (you can now easily retrieve it from 1Password if needed)
    - Enable the services you want to sync (e.g., iCloud Drive, Photos, Contacts, etc.)
@@ -54,7 +57,8 @@ That's it! The migration tool will handle the rest of the setup automatically.
 ## Installation
 
 1. Clone this repository on the old Mac:
-   ```
+
+   ```bash
    git clone https://github.com/gullitmiranda/mac-migration-tool.git
    cd mac-migration-tool
    ```
@@ -65,7 +69,7 @@ That's it! You're ready to use the migration tool.
 
 Run the script with the following options:
 
-```
+```bash
 ./mac-migrate.sh [OPTIONS]
 
 Options:
@@ -80,11 +84,18 @@ Options:
 ```
 
 Example:
-```
-./mac-migrate.sh -i 192.168.1.100 -u johndoe -s -e -a -m
+
+```bash
+./mac-migrate.sh -i 192.168.68.106 -u gullitmiranda \
+   --dry-run \ # First run without making changes
+   --sync-home \
+   --export-apps \
+   --install-apps \
+   --migrate-settings
 ```
 
 This command will:
+
 1. Set up Homebrew and mas on the new Mac
 2. Sync the home folder
 3. Export the list of installed apps from the old Mac

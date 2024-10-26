@@ -2,28 +2,27 @@
 
 # Logging functions
 log_info() {
-  echo "[INFO] $1"
+	echo "[INFO] $1"
 }
 
 log_error() {
-  echo "[ERROR] $1" >&2
+	echo "[ERROR] $1" >&2
 }
 
 log_warning() {
-  echo "[WARNING] $1" >&2
+	echo "[WARNING] $1" >&2
 }
 
 # Function to run commands with dry-run support
 run_command() {
-  local command="$1"
-  shift
-  local args=("$@")
-  local dry_run="${args[-1]}"
-  unset 'args[-1]'
+	local cmd=("$@")
+	local last_arg="${cmd[-1]}"
 
-  if [ "$dry_run" = true ]; then
-    log_info "[DRY RUN] Would run: $command ${args[*]}"
-  else
-    $command "${args[@]}"
-  fi
+	if [[ ${last_arg} == "--dry-run" ]]; then
+		unset 'cmd[-1]'
+		echo "[DRY RUN] Would execute: ${cmd[*]}"
+	else
+		echo "Executing: ${cmd[*]}"
+		"${cmd[@]}"
+	fi
 }

@@ -4,8 +4,15 @@ source "$(dirname "$0")/utils.sh"
 
 DRY_RUN="$1"
 
-# Export Homebrew packages
-run_command brew bundle dump --file=~/Brewfile "$DRY_RUN"
+BREWFILE="Brewfile"
 
-# Export Mac App Store apps
-run_command mas list ">" ~/mas_apps.txt "$DRY_RUN"
+log_info "Exporting list of installed applications to Brewfile..."
+
+if [[ ${DRY_RUN} == "--dry-run" ]]; then
+	log_info "[DRY RUN] Would create Brewfile with installed applications"
+else
+	# Export Homebrew bundle (includes brew, cask, and mas entries)
+	run_command brew bundle dump --force --file="${BREWFILE}"
+fi
+
+log_info "Exported app list to ${BREWFILE}"
