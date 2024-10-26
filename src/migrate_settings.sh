@@ -2,6 +2,9 @@
 
 source "$(dirname "$0")/utils.sh"
 
+# Append to the existing LOG_LABEL for this script
+export LOG_LABEL="${LOG_LABEL:+${LOG_LABEL}:}migrate-settings"
+
 NEW_MAC_IP="$1"
 USERNAME="$2"
 DRY_RUN="$3"

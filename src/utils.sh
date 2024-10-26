@@ -8,15 +8,15 @@ NC='\033[0m' # No Color
 
 # Logging functions
 log_info() {
-	echo -e "${GREEN}[INFO]${NC} $1"
+	echo -e "${GREEN}[INFO]${NC}${LOG_LABEL:+ [${LOG_LABEL}]} $1"
 }
 
 log_warning() {
-	echo -e "${YELLOW}[WARNING]${NC} $1"
+	echo -e "${YELLOW}[WARNING]${NC}${LOG_LABEL:+ [${LOG_LABEL}]} $1"
 }
 
 log_error() {
-	echo -e "${RED}[ERROR]${NC} $1"
+	echo -e "${RED}[ERROR]${NC}${LOG_LABEL:+ [${LOG_LABEL}]} $1"
 }
 
 # Function to run commands with verbose support
@@ -30,7 +30,7 @@ log_verbose_run_command() {
 	local cmd=("$@")
 
 	if [[ ${VERBOSE} == "true" ]]; then
-		echo "Run: ${cmd[*]}"
+		log_info "Run: ${cmd[*]}"
 	fi
 }
 

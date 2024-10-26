@@ -3,6 +3,9 @@
 # Source utility functions
 source "$(dirname "$0")/utils.sh"
 
+# Append to the existing LOG_LABEL for this script
+export LOG_LABEL="${LOG_LABEL:+${LOG_LABEL}:}sync-home"
+
 # If no exclude file is specified, use the default
 if [[ -z ${EXCLUDE_FILE} ]]; then
 	EXCLUDE_FILE="${DEFAULT_EXCLUDE_FILE}"

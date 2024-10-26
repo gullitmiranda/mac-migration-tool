@@ -104,6 +104,9 @@ while [[ $# -gt 0 ]]; do
 	esac
 done
 
+# Set LOG_LABEL for the main script
+export LOG_LABEL="mac-migrate"
+
 # Check if required parameters are provided
 if [[ -z ${NEW_MAC_IP} || -z ${USERNAME} ]]; then
 	log_error "Error: IP address and username are required."
