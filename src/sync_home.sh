@@ -29,12 +29,15 @@ RSYNC_LOG="${OUTPUT_DIR}/rsync_log.txt"
 rsync_cmd+=" ~/ \"${USERNAME}@${NEW_MAC_IP}:~/\""
 
 if [[ ${DRY_RUN} == true ]]; then
-	log_info "[DRY RUN] Previewing sync operation..."
+	log_info "[DRY RUN] Previewing sync operation, check ${RSYNC_LOG} for details..."
 	rsync_cmd+=" --dry-run"
+else
+	log_info "Syncing home folder to ${NEW_MAC_IP}, check ${RSYNC_LOG} for details..."
 fi
 
 # Run the rsync command and capture the output and exit status
-if ! run_command eval "${rsync_cmd}" >"${RSYNC_LOG}" 2>&1; then
+log_verbose_run_command "${rsync_cmd} >${RSYNC_LOG} 2>&1"
+if ! eval "${rsync_cmd}" >"${RSYNC_LOG}" 2>&1; then
 	log_error "Home folder sync encountered errors. Check ${RSYNC_LOG} for details."
 
 	# Display the last few lines of the log file, which often contain error messages

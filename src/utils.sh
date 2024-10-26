@@ -22,12 +22,16 @@ log_error() {
 # Function to run commands with verbose support
 run_command() {
 	local cmd=("$@")
+	log_verbose_run_command "${cmd[@]}"
+	"${cmd[@]}"
+}
+
+log_verbose_run_command() {
+	local cmd=("$@")
 
 	if [[ ${VERBOSE} == "true" ]]; then
 		echo "Run: ${cmd[*]}"
 	fi
-
-	"${cmd[@]}"
 }
 
 check_required_vars() {
