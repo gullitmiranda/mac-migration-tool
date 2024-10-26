@@ -21,9 +21,6 @@ VERBOSE=false
 # Default exclude file path
 DEFAULT_EXCLUDE_FILE="${SCRIPT_DIR}/config/sync_home.gitignore"
 
-# State file to track migration progress
-STATE_FILE="${OUTPUT_DIR}/migration_state.txt"
-
 # Function to display usage
 usage() {
 	cat <<EOF
@@ -54,46 +51,6 @@ Common options:
   -h, --help                Display this help message
 EOF
 	exit 1
-}
-
-# Function to update state
-update_state() {
-	echo "$1" >>"${STATE_FILE}"
-}
-
-# Function to check if a step has been completed
-is_step_completed() {
-	grep -q "^$1$" "${STATE_FILE}" 2>/dev/null
-}
-
-# Function to resume migration
-resume_migration() {
-	if [[ ! -f ${STATE_FILE} ]]; then
-		log_info "No previous migration state found. Starting fresh migration."
-		return
-	fi
-
-	log_info "Resuming previous migration..."
-
-	if is_step_completed "EXPORT_APPS"; then
-		log_info "Skipping app export (already completed)"
-		EXPORT_APPS=false
-	fi
-
-	if is_step_completed "SYNC_HOME"; then
-		log_info "Skipping home folder sync (already completed)"
-		SYNC_HOME=false
-	fi
-
-	if is_step_completed "INSTALL_APPS"; then
-		log_info "Skipping app installation (already completed)"
-		INSTALL_APPS=false
-	fi
-
-	if is_step_completed "MIGRATE_SETTINGS"; then
-		log_info "Skipping settings migration (already completed)"
-		MIGRATE_SETTINGS=false
-	fi
 }
 
 # Parse command-line arguments
@@ -188,6 +145,49 @@ export DRY_RUN
 export OUTPUT_DIR
 export EXCLUDE_FILE
 export VERBOSE
+
+# State file to track migration progress
+STATE_FILE="${OUTPUT_DIR}/migration_state.txt"
+
+# Function to update state
+update_state() {
+	echo "$1" >>"${STATE_FILE}"
+}
+
+# Function to check if a step has been completed
+is_step_completed() {
+	grep -q "^$1$" "${STATE_FILE}" 2>/dev/null
+}
+
+# Function to resume migration
+resume_migration() {
+	if [[ ! -f ${STATE_FILE} ]]; then
+		log_info "No previous migration state found. Starting fresh migration."
+		return
+	fi
+
+	log_info "Resuming previous migration..."
+
+	if is_step_completed "EXPORT_APPS"; then
+		log_info "Skipping app export (already completed)"
+		EXPORT_APPS=false
+	fi
+
+	if is_step_completed "SYNC_HOME"; then
+		log_info "Skipping home folder sync (already completed)"
+		SYNC_HOME=false
+	fi
+
+	if is_step_completed "INSTALL_APPS"; then
+		log_info "Skipping app installation (already completed)"
+		INSTALL_APPS=false
+	fi
+
+	if is_step_completed "MIGRATE_SETTINGS"; then
+		log_info "Skipping settings migration (already completed)"
+		MIGRATE_SETTINGS=false
+	fi
+}
 
 # Initialize or resume migration
 if [[ -f ${STATE_FILE} ]]; then
