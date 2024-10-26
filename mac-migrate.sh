@@ -133,8 +133,6 @@ else
 	mkdir -p "${OUTPUT_DIR}"
 fi
 
-log_info "Using output directory: ${OUTPUT_DIR}"
-
 # Common variables
 export OUTPUT_DIR
 export DRY_RUN
