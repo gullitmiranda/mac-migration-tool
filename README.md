@@ -25,8 +25,19 @@ This tool is ideal for power users, developers, and anyone who wants more contro
 
 ## Prerequisites
 
+Before running the migration script, ensure that:
+
 - Both Macs should be on the same network
 - SSH access enabled on the new Mac
+- the terminal (e.g. Terminal, iTerm2, Warp, etc.) that you'll be using has Full Disk Access:
+
+  1. Open System Preferences > Security & Privacy > Privacy.
+  2. Select "Full Disk Access" from the left sidebar.
+  3. Click the lock icon to make changes (you may need to enter your password).
+  4. Click the "+" button and add the terminal you'll be using to the list.
+  5. Restart the terminal for the changes to take effect.
+
+> These steps are necessary to allow the script to have the necessary permissions to connect to the new Mac and access all required files and folders during the migration process.
 
 ## Preparing the New Mac
 
