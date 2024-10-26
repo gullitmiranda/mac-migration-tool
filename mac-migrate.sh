@@ -135,16 +135,16 @@ fi
 
 log_info "Using output directory: ${OUTPUT_DIR}"
 
-# If no exclude file is specified, use the default
-if [[ -z ${EXCLUDE_FILE} ]]; then
-	EXCLUDE_FILE="${DEFAULT_EXCLUDE_FILE}"
-	log_info "Using default exclude file: ${EXCLUDE_FILE}"
-fi
-
-export DRY_RUN
+# Common variables
 export OUTPUT_DIR
-export EXCLUDE_FILE
+export DRY_RUN
 export VERBOSE
+
+# Sync home variables
+export NEW_MAC_IP
+export USERNAME
+export DEFAULT_EXCLUDE_FILE
+export EXCLUDE_FILE
 
 # State file to track migration progress
 STATE_FILE="${OUTPUT_DIR}/migration_state.txt"
@@ -207,8 +207,6 @@ fi
 
 if [[ ${SYNC_HOME} == true ]]; then
 	log_info "Syncing home folder..."
-	export NEW_MAC_IP
-	export USERNAME
 	bash "${SCRIPT_DIR}/src/sync_home.sh"
 	update_state "SYNC_HOME"
 fi

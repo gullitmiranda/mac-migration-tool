@@ -3,6 +3,12 @@
 # Source utility functions
 source "$(dirname "$0")/utils.sh"
 
+# If no exclude file is specified, use the default
+if [[ -z ${EXCLUDE_FILE} ]]; then
+	EXCLUDE_FILE="${DEFAULT_EXCLUDE_FILE}"
+	log_info "Using default exclude file: ${EXCLUDE_FILE}"
+fi
+
 # Check if required environment variables are set
 check_required_vars "NEW_MAC_IP" "USERNAME" "OUTPUT_DIR" "EXCLUDE_FILE"
 
