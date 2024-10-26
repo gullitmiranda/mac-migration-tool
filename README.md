@@ -91,8 +91,10 @@ Options:
 Example:
 
 ```bash
+# First run without making changes
 ./mac-migrate.sh -i 192.168.68.106 -u gullitmiranda \
-   --dry-run \ # First run without making changes
+   --dry-run \
+   --verbose \
    --sync-home \
    --export-apps \
    --install-apps \

@@ -157,16 +157,16 @@ fi
 
 if ${INSTALL_APPS}; then
   log_info "Installing apps on new Mac..."
-  if [[ "${DRY_RUN}" = false ]]; then
-    ssh "${USERNAME}@${NEW_MAC_IP}" 'bash -s' <"${SCRIPT_DIR}/src/install_apps.sh"
-  else
+  if [[ "${DRY_RUN}" = true ]]; then
     log_info "[DRY RUN] Would run install_apps.sh on the new Mac"
+  else
+    run_command ssh "${USERNAME}@${NEW_MAC_IP}" 'bash -s' <"${SCRIPT_DIR}/src/install_apps.sh"
   fi
 fi
 
 if ${MIGRATE_SETTINGS}; then
   log_info "Migrating settings..."
-  bash "${SCRIPT_DIR}/src/migrate_settings.sh" "${NEW_MAC_IP}" "${USERNAME}" "${DRY_RUN}"
+  run_command bash "${SCRIPT_DIR}/src/migrate_settings.sh"
 fi
 
 log_info "Migration complete!"

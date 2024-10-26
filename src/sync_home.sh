@@ -24,11 +24,10 @@ rsync_cmd+=" ~/ \"${USERNAME}@${NEW_MAC_IP}:~/\""
 
 if [[ "${DRY_RUN}" = true ]]; then
 	log_info "[DRY RUN] Previewing sync operation..."
-	rsync_cmd+=" --dry-run"
-	eval "${rsync_cmd}"
+	run_command eval "${rsync_cmd} --dry-run"
 	log_info "[DRY RUN] Sync preview complete. No changes were made."
 else
 	log_info "Starting home folder sync..."
-	eval "${rsync_cmd}"
+	run_command eval "${rsync_cmd}"
 	log_info "Home folder sync complete!"
 fi

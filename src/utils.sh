@@ -13,18 +13,15 @@ log_warning() {
 	echo "[WARNING] $1" >&2
 }
 
-# Function to run commands with dry-run support
+# Function to run commands with verbose support
 run_command() {
 	local cmd=("$@")
-	local last_arg="${cmd[-1]}"
 
-	if [[ ${last_arg} == "--dry-run" ]]; then
-		unset 'cmd[-1]'
-		echo "[DRY RUN] Would execute: ${cmd[*]}"
-	else
-		echo "Executing: ${cmd[*]}"
-		"${cmd[@]}"
+	if [[ "${VERBOSE}" = true ]]; then
+		echo "Run: ${cmd[*]}"
 	fi
+
+	"${cmd[@]}"
 }
 
 check_required_vars() {
