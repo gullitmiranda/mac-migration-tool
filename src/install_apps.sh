@@ -2,8 +2,6 @@
 
 source "$(dirname "$0")/utils.sh"
 
-DRY_RUN="$1"
-
 BREWFILE="Brewfile"
 
 # Function to install Homebrew
@@ -11,7 +9,7 @@ install_homebrew() {
 	log_info "Installing Homebrew..."
 	local install_script
 	install_script="$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-	if ! run_command /bin/bash -c "${install_script}" "${DRY_RUN}"; then
+	if ! run_command /bin/bash -c "${install_script}"; then
 		log_error "Homebrew installation failed"
 		return 1
 	fi
@@ -32,6 +30,6 @@ fi
 
 log_info "Installing applications from ${BREWFILE}..."
 
-run_command brew bundle install --file="${BREWFILE}" "${DRY_RUN}"
+run_command brew bundle install --file="${BREWFILE}"
 
 log_info "Finished installing applications."
