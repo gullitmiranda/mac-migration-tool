@@ -1,18 +1,22 @@
 #!/bin/bash
 
+# Source utility functions
 source "$(dirname "$0")/utils.sh"
 
-DRY_RUN="$1"
+# Function to export Homebrew packages and Mac App Store apps
+export_brew() {
+	local output_file="$1"
+	log_info "Exporting Homebrew packages and Mac App Store apps, excluding VSCode extensions..."
+	run_command brew bundle dump --all --describe --no-vscode --file="${output_file}" --force
+}
 
-BREWFILE="Brewfile"
-
-log_info "Exporting list of installed applications to Brewfile..."
-
-if [[ ${DRY_RUN} == "--dry-run" ]]; then
-	log_info "[DRY RUN] Would create Brewfile with installed applications"
-else
-	# Export Homebrew bundle (includes brew, cask, and mas entries)
-	run_command brew bundle dump --force --file="${BREWFILE}"
+# Check if OUTPUT_DIR is set
+if [[ -z "${OUTPUT_DIR}" ]]; then
+	log_error "OUTPUT_DIR is not set. Please run this script through the main mac-migrate.sh script."
+	exit 1
 fi
 
-log_info "Exported app list to ${BREWFILE}"
+# Export Homebrew packages and Mac App Store apps
+export_brew "${OUTPUT_DIR}/Brewfile"
+
+log_info "Apps list exported to ${OUTPUT_DIR}/Brewfile"

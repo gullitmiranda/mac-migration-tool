@@ -113,7 +113,7 @@ fi
 
 if ${EXPORT_APPS}; then
   log_info "Exporting apps list..."
-  bash "${SCRIPT_DIR}/src/export_apps.sh" "${DRY_RUN}"
+  bash "${SCRIPT_DIR}/src/export_apps.sh"
 fi
 
 if ${INSTALL_APPS}; then
