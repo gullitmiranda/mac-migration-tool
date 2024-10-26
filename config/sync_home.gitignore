@@ -9,25 +9,107 @@
 # System and hidden files
 .DS_Store
 .Trash
+.cache
+/Documents
+/Downloads
+
 .local/share/Trash
 .CFUserTextEncoding
 /Library/Logs/
 /Library/Keychains
 
 # iCloud syncronization files
-/Library/Application Support/iCloud
-/Library/Application Support/MobileSync/Backup/
-/Library/Mobile Documents/
-/Library/Containers/com.apple.CloudDocs.iCloudDriveFileProvider
-/Library/Caches/com.apple.iCloudHelper
-/Library/Preferences/MobileMeAccounts.plist
-/Library/Preferences/com.apple.iCloud.plist
-/Library/Preferences/com.apple.CloudKit.plist
+/Library/Accounts
+/Library/AppleMediaServices
+/Library/Application Support/AddressBook
+/Library/Application Support/CallHistoryDB
+/Library/Application Support/CallHistoryTransactions
 /Library/Application Support/CloudDocs
 /Library/Application Support/CloudKit
-
-# Google Drive, Dropbox, etc. syncronization files
-/Library/CloudStorage/
+/Library/Application Support/com.apple.avfoundation/Frecents
+/Library/Application Support/com.apple.sharedfilelist
+/Library/Application Support/com.apple.TCC
+/Library/Application Support/FaceTime
+/Library/Application Support/FileProvider
+/Library/Application Support/iCloud
+/Library/Application Support/Knowledge
+/Library/Application Support/MobileSync
+/Library/Application Support/MobileSync/Backup/
+/Library/Assistant/SiriVocabulary
+/Library/Autosave Information
+/Library/Biome
+/Library/Caches/CloudKit
+/Library/Caches/com.apple.iCloudHelper
+/Library/Caches/com.apple.Safari
+/Library/Caches/FamilyCircle
+/Library/Calendars
+/Library/com.apple.aiml.instrumentation
+/Library/ContainerManager
+/Library/Containers/com.apple.archiveutility
+/Library/Containers/com.apple.CloudDocs.iCloudDriveFileProvider
+/Library/Containers/com.apple.CloudDocs.MobileDocumentsFileProvider
+/Library/Containers/com.apple.corerecents.recentsd/Data/Library/Recents
+/Library/Containers/com.apple.Home
+/Library/Containers/com.apple.mail
+/Library/Containers/com.apple.Maps/Data/Maps
+/Library/Containers/com.apple.MobileSMS
+/Library/Containers/com.apple.Notes
+/Library/Containers/com.apple.Safari
+/Library/Containers/com.apple.stocks
+/Library/Cookies
+/Library/CoreFollowUp
+/Library/Daemon Containers
+/Library/DoNotDisturb
+/Library/DuetExpertCenter
+/Library/Group Containers/com.apple.PreviewLegacySignaturesConversion
+/Library/Group Containers/com.apple.systempreferences.cache
+/Library/Group Containers/group.com.apple.accessibility.voicebanking
+/Library/Group Containers/group.com.apple.AppleSpell
+/Library/Group Containers/group.com.apple.calendar
+/Library/Group Containers/group.com.apple.chronod
+/Library/Group Containers/group.com.apple.DeviceActivity
+/Library/Group Containers/group.com.apple.feedbacklogger
+/Library/Group Containers/group.com.apple.gamecenter
+/Library/Group Containers/group.com.apple.iCloudDrive
+/Library/Group Containers/group.com.apple.mail
+/Library/Group Containers/group.com.apple.mlhost
+/Library/Group Containers/group.com.apple.notes
+/Library/Group Containers/group.com.apple.PegasusConfiguration
+/Library/Group Containers/group.com.apple.Photos.PhotosFileProvider
+/Library/Group Containers/group.com.apple.private.translation
+/Library/Group Containers/group.com.apple.reminders
+/Library/Group Containers/group.com.apple.Safari.SandboxBroker
+/Library/Group Containers/group.com.apple.secure-control-center-preferences
+/Library/Group Containers/group.com.apple.sharingd
+/Library/Group Containers/group.com.apple.shortcuts
+/Library/Group Containers/group.com.apple.siri.userfeedbacklearning
+/Library/Group Containers/group.com.apple.spotlight
+/Library/Group Containers/group.com.apple.stocks
+/Library/Group Containers/group.com.apple.tips
+/Library/Group Containers/group.com.apple.tipsnext
+/Library/Group Containers/group.com.apple.transparency
+/Library/Group Containers/group.com.apple.weather
+/Library/HomeKit
+/Library/IdentityServices
+/Library/IntelligencePlatform
+/Library/Mail
+/Library/Messages
+/Library/Metadata/com.apple.IntelligentSuggestions
+/Library/Metadata/CoreSpotlight
+/Library/Mobile Documents/
+/Library/PersonalizationPortrait
+/Library/Photos/Libraries/Syndication.photoslibrary
+/Library/Preferences/com.apple.CloudKit.plist
+/Library/Preferences/com.apple.iCloud.plist
+/Library/Preferences/MobileMeAccounts.plist
+/Library/Reminders
+/Library/Safari
+/Library/Sharing
+/Library/Shortcuts
+/Library/StatusKit
+/Library/Suggestions
+/Library/Trial
+/Library/Weather
 
 # JumpCloud files
 /Library/Application Support/JumpCloud-Remote-Assist
@@ -35,10 +117,11 @@
 /Library/Preferences/com.jumpcloud.serviceenroller.plist
 /Library/Preferences/com.jumpcloud.jcagent-tray.plist
 
-# Cloud storage
-Google Drive
-Dropbox
-iCloud
+# Google Drive, Dropbox, Cloud storage
+/Library/CloudStorage/
+/Google Drive
+/Dropbox
+/iCloud
 
 # # Temporary and backup files
 # *.tmp
