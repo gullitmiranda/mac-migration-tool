@@ -18,18 +18,18 @@ This tool is ideal for power users, developers, and anyone who wants more contro
 ## Features
 
 - Sync home folder
+- Analyze and filter sync logs
 - Export and install applications
 - Migrate settings
 - Dry-run option for testing
-- Automated setup of the new Mac
 
 ## Prerequisites
 
 Before running the migration script, ensure that:
 
 - Both Macs should be on the same network
-- SSH access enabled on the new Mac
-- the terminal (e.g. Terminal, iTerm2, Warp, etc.) that you'll be using has Full Disk Access:
+- SSH access is enabled on the new Mac
+- The terminal (e.g., Terminal, iTerm2, Warp, etc.) that you'll be using has Full Disk Access:
 
   1. Open System Preferences > Security & Privacy > Privacy.
   2. Select "Full Disk Access" from the left sidebar.
@@ -48,10 +48,10 @@ Before running the migration tool, you need to prepare the new Mac with these mi
    - Go to System Preferences > Sharing
    - Check the box next to "Remote Login"
    - Make note of the IP address shown (e.g., 192.168.68.106)
-   - Disable the firewall in both machines
-   - Testing the connection:
+   - Disable the firewall on both machines
+   - Test the connection:
      ```bash
-     ssh gullitmiranda@192.168.68.106
+     ssh username@192.168.68.106
      ```
 
 2. Set up 1Password (recommended):
@@ -83,42 +83,58 @@ That's it! You're ready to use the migration tool.
 
 ## Usage
 
-Run the script with the following options:
+The main script `mac-migrate.sh` provides several subcommands for different migration tasks:
 
 ```bash
-./mac-migrate.sh [OPTIONS]
+./mac-migrate.sh <command> [OPTIONS]
 
-Options:
-  -i, --ip IP_ADDRESS       IP address of the new MacBook
-  -u, --username USERNAME   Username on both machines
-  -s, --sync-home           Sync home folder
-  -e, --export-apps         Export list of installed apps
-  -a, --install-apps        Install apps on the new MacBook
-  -m, --migrate-settings    Migrate settings
+Commands:
+  sync-home           Sync home folder
+  sync-analyze-log    Analyze sync log
+  sync-filter-log     Filter sync log
+  apps-export         Export list of installed apps
+  apps-install        Install apps on the new MacBook
+
+Common options:
+  -o, --output-dir DIR      Specify output directory for artifacts
   -d, --dry-run             Perform a dry run without making changes
+  -v, --verbose             Enable verbose output
   -h, --help                Display this help message
+
+Use './mac-migrate.sh <command> --help' for more information about a specific command.
 ```
 
-Example:
+### Examples:
 
-```bash
-# First run without making changes
-./mac-migrate.sh -i 192.168.68.106 -u gullitmiranda \
-   --dry-run \
-   --verbose \
-   --sync-home \
-   --export-apps \
-   --install-apps \
-   --migrate-settings
-```
+1. Sync home folder:
 
-This command will:
+   ```bash
+   ./mac-migrate.sh sync-home --dry-run
+   ```
 
-1. Set up Homebrew and mas on the new Mac
-2. Sync the home folder
-3. Export the list of installed apps from the old Mac
-4. Install the exported apps on the new Mac
-5. Migrate settings to the new Mac at 192.168.1.100 for the user 'johndoe'
+2. Analyze sync log:
+
+   ```bash
+   ./mac-migrate.sh sync-analyze-log
+   ```
+
+3. Filter sync log:
+
+   ```bash
+   ./mac-migrate.sh sync-filter-log
+   ```
+
+4. Export installed apps:
+
+   ```bash
+   ./mac-migrate.sh apps-export
+   ```
+
+5. Install apps on the new Mac:
+
+   ```bash
+   ./mac-migrate.sh apps-install
+   ```
 
 ## Caution
 

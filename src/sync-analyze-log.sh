@@ -1,40 +1,42 @@
 #!/bin/bash
 
-# Source utility functions
-source "$(dirname "$0")/utils.sh"
+# Set LOG_LABEL for this script
+export LOG_LABEL="${LOG_LABEL:+${LOG_LABEL}:}sync-analyze-log"
 
-# Append to the existing LOG_LABEL for this script
-export LOG_LABEL="${LOG_LABEL:+${LOG_LABEL}:}analyze-sync-log"
+# Source utility functions and config
+source "$(dirname "$0")/_utils.sh"
+source "$(dirname "$0")/../config/config.sh"
 
 # Default values
-RSYNC_LOG="${OUTPUT_DIR}/rsync_log.txt"
-ANALYSIS_LOG="${OUTPUT_DIR}/sync_analysis.log"
-MAX_DEPTH=3
+SYNC_LOG="${DEFAULT_SYNC_HOME_LOG}"
+MAX_DEPTH="${DEFAULT_MAX_DEPTH}"
 SHOW_ALL=false
 
 # Function to display usage
 usage() {
-  echo "Usage: $0 [OPTIONS]"
-  echo "Analyze the rsync log to identify files and directories that were not synchronized."
-  echo
-  echo "Options:"
-  echo "  -l, --log FILE        Specify rsync log file (default: ${RSYNC_LOG})"
-  echo "  -o, --output FILE     Specify analysis output file (default: ${ANALYSIS_LOG})"
-  echo "  -d, --max-depth NUM   Maximum directory depth to display (default: ${MAX_DEPTH})"
-  echo "  -a, --all             Show all changes, including synced files (default: only show unsynced)"
-  echo "  -h, --help            Display this help message"
-  exit 1
+  cat <<EOF
+Analyze the sync log to identify files and directories that were not synchronized.
+
+Usage: ${CLI_NAME} sync-analyze-log [OPTIONS]
+
+Options:
+  -i, --input-log FILE  Specify input sync log file (default: ${SYNC_LOG})
+  -o, --output FILE     Specify analysis output file (default: <input-file>-analyzed.log)
+  -d, --max-depth NUM   Maximum directory depth to display (default: ${MAX_DEPTH})
+  -a, --all             Show all changes, including synced files (default: only show unsynced)
+  -h, --help            Display this help message
+EOF
 }
 
 # Parse command-line arguments
 while [[ $# -gt 0 ]]; do
   case $1 in
-  -l | --log)
-    RSYNC_LOG="$2"
+  -i | --input-log)
+    SYNC_LOG="$2"
     shift 2
     ;;
   -o | --output)
-    ANALYSIS_LOG="$2"
+    SYNC_ANALYZE_LOG="$2"
     shift 2
     ;;
   -d | --max-depth)
@@ -47,22 +49,29 @@ while [[ $# -gt 0 ]]; do
     ;;
   -h | --help)
     usage
+    exit 0
     ;;
   *)
     echo "Unknown option: $1"
     usage
+    exit 1
     ;;
   esac
 done
 
-# Check if the rsync log file exists
-if [[ ! -f "${RSYNC_LOG}" ]]; then
-  log_error "Rsync log file not found: ${RSYNC_LOG}"
+# Set SYNC_ANALYZE_LOG based on SYNC_LOG if not defined
+if [[ -z "${SYNC_ANALYZE_LOG}" ]]; then
+  SYNC_ANALYZE_LOG="${SYNC_LOG%.*}-analyzed.log"
+fi
+
+# Check if the sync log file exists
+if [[ ! -f "${SYNC_LOG}" ]]; then
+  log_error "Sync log file not found: ${SYNC_LOG}"
   exit 1
 fi
 
-log_info "Analyzing rsync log: ${RSYNC_LOG}"
-log_info "Saving analysis to: ${ANALYSIS_LOG}"
+log_info "Analyzing sync log: ${SYNC_LOG}"
+log_info "Saving analysis to: ${SYNC_ANALYZE_LOG}"
 
 # Function to get the depth of a file path
 get_depth() {
@@ -74,7 +83,7 @@ get_depth() {
 log_both() {
   local message="$1"
   log_info "$message"
-  echo "$message" >>"$ANALYSIS_LOG"
+  echo "$message" >>"$SYNC_ANALYZE_LOG"
 }
 
 # Function to analyze the rsync log
@@ -84,7 +93,7 @@ analyze_rsync_log() {
   local total_unsynced=0
 
   # Clear the analysis log file
-  >"$ANALYSIS_LOG"
+  >"$SYNC_ANALYZE_LOG"
 
   while IFS= read -r line; do
     if [[ $line =~ ^[[:alpha:]*]+ ]]; then
@@ -155,16 +164,16 @@ analyze_rsync_log() {
 
       ((total_unsynced++))
     fi
-  done <"${RSYNC_LOG}"
+  done <"${SYNC_LOG}"
 
   log_both "Total items changed or transferred: ${total_changes}"
   log_both "Total items skipped: ${total_skipped}"
   log_both "Total items not synced: ${total_unsynced}"
 
   # Extract and display statistics
-  local total_files=$(grep "Number of files transferred:" "${RSYNC_LOG}" | awk '{print $5}')
-  local total_size=$(grep "Total transferred file size:" "${RSYNC_LOG}" | awk '{print $5, $6}')
-  local total_time=$(grep "Total transferred file size:" "${RSYNC_LOG}" | awk '{print $10, $11}')
+  local total_files=$(grep "Number of files transferred:" "${SYNC_LOG}" | awk '{print $5}')
+  local total_size=$(grep "Total transferred file size:" "${SYNC_LOG}" | awk '{print $5, $6}')
+  local total_time=$(grep "Total transferred file size:" "${SYNC_LOG}" | awk '{print $10, $11}')
 
   log_both "Sync Statistics:"
   log_both "  - Total files transferred: ${total_files:-N/A}"
@@ -175,4 +184,4 @@ analyze_rsync_log() {
 # Run the analysis
 analyze_rsync_log
 
-log_both "Rsync log analysis complete. Results saved to ${ANALYSIS_LOG}"
+log_both "Sync log analysis complete. Results saved to ${SYNC_ANALYZE_LOG}"

@@ -1,11 +1,45 @@
 #!/bin/bash
 
-source "$(dirname "$0")/utils.sh"
+# Source utility functions and config
+source "$(dirname "$0")/_utils.sh"
+source "$(dirname "$0")/../config/config.sh"
 
-# Append to the existing LOG_LABEL for this script
-export LOG_LABEL="${LOG_LABEL:+${LOG_LABEL}:}install-apps"
+# Set LOG_LABEL for this script
+export LOG_LABEL="${LOG_LABEL:+${LOG_LABEL}:}apps-install"
 
-BREWFILE="Brewfile"
+BREWFILE="${DEFAULT_BREWFILE}"
+
+# Function to display usage
+usage() {
+	cat <<EOF
+Install applications using Homebrew and Brewfile.
+
+Usage: ${CLI_NAME} apps-install [OPTIONS]
+
+Options:
+  -f, --file FILE    Specify Brewfile (default: ${BREWFILE})
+  -h, --help         Display this help message
+EOF
+}
+
+# Parse command-line arguments
+while [[ $# -gt 0 ]]; do
+	case $1 in
+	-f | --file)
+		BREWFILE="$2"
+		shift 2
+		;;
+	-h | --help)
+		usage
+		exit 0
+		;;
+	*)
+		echo "Unknown option: $1"
+		usage
+		exit 1
+		;;
+	esac
+done
 
 # Function to install Homebrew
 install_homebrew() {

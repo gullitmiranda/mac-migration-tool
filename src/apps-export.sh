@@ -1,10 +1,37 @@
 #!/bin/bash
 
 # Source utility functions
-source "$(dirname "$0")/utils.sh"
+source "$(dirname "$0")/_utils.sh"
 
-# Append to the existing LOG_LABEL for this script
-export LOG_LABEL="${LOG_LABEL:+${LOG_LABEL}:}export-apps"
+# Set LOG_LABEL for this script
+export LOG_LABEL="${LOG_LABEL:+${LOG_LABEL}:}apps-export"
+
+# Function to display usage
+usage() {
+	cat <<EOF
+Export list of installed apps using Homebrew.
+
+Usage: ${CLI_NAME} apps-export [OPTIONS]
+
+Options:
+  -h, --help            Display this help message
+EOF
+}
+
+# Parse command-line arguments
+while [[ $# -gt 0 ]]; do
+	case $1 in
+	-h | --help)
+		usage
+		exit 0
+		;;
+	*)
+		echo "Unknown option: $1"
+		usage
+		exit 1
+		;;
+	esac
+done
 
 # Function to export Homebrew packages and Mac App Store apps
 export_brew() {
