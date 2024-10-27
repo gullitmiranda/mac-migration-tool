@@ -17,6 +17,7 @@ DRY_RUN=false
 OUTPUT_DIR=""
 EXCLUDE_FILE=""
 VERBOSE=false
+ANALYZE_SYNC_LOG=false
 
 # Default exclude file path
 DEFAULT_EXCLUDE_FILE="${SCRIPT_DIR}/config/sync_home.gitignore"
@@ -43,6 +44,9 @@ Install apps options:
 
 Migrate settings options:
   -m, --migrate-settings    Migrate settings
+
+Analyze sync log options:
+  -A, --analyze-sync-log    Analyze sync log after sync
 
 Common options:
   -o, --output-dir DIR      Specify output directory for artifacts
@@ -97,6 +101,10 @@ while [[ $# -gt 0 ]]; do
 		shift
 		;;
 	-h | --help) usage ;;
+	-A | --analyze-sync-log)
+		ANALYZE_SYNC_LOG=true
+		shift
+		;;
 	*)
 		echo "Unknown option: $1"
 		usage
@@ -113,9 +121,9 @@ if [[ -z ${OUTPUT_DIR} ]]; then
 	log_info "No output directory specified. Using temporary directory: ${OUTPUT_DIR}"
 elif [[ -d ${OUTPUT_DIR} ]]; then
 	if [[ -f "${OUTPUT_DIR}/migration_state.txt" ]]; then
-		log_info "Existing migration state found in ${OUTPUT_DIR}. Resuming migration."
+		log_info "Existing migration state found in \"${OUTPUT_DIR}\". Resuming migration."
 	else
-		read -p "Output directory ${OUTPUT_DIR} already exists. Do you want to override it? (y/n) " -n 1 -r
+		read -p "Output directory \"${OUTPUT_DIR}\" already exists. Do you want to override it? (y/n) " -n 1 -r
 		echo
 		if [[ ! ${REPLY} =~ ^[Yy]$ ]]; then
 			log_error "Aborting due to existing output directory."
@@ -206,6 +214,11 @@ if [[ ${SYNC_HOME} == true ]]; then
 	log_info "Syncing home folder..."
 	bash "${SCRIPT_DIR}/src/sync_home.sh"
 	update_state "SYNC_HOME"
+fi
+
+if [[ ${ANALYZE_SYNC_LOG} == true ]]; then
+	log_info "Analyzing sync log..."
+	bash "${SCRIPT_DIR}/src/analyze_sync_log.sh"
 fi
 
 if ${INSTALL_APPS}; then

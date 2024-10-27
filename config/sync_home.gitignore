@@ -1,5 +1,5 @@
 ###########################################
-# rsync exclude patterns
+# rsync exclude patterns, works the same way as gitignore
 #
 # Taking into consideration that rsync is used to sync the home folder,
 # - patterns with / are matched against the full path

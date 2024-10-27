@@ -1,0 +1,57 @@
+# sync log exclude patterns, works the same way as gitignore
+#
+# Taking into consideration that rsync is used to sync the home folder,
+# - patterns with / are matched against the full path
+# - patterns without / are matched against the filename only
+###########################################
+
+/.cargo/
+/.chef-repo/
+/.chef-workstation/
+/.chef/
+/.colima/
+/.config/gcloud/
+/.config/raycast/
+/.config/zed/
+/.cursor-tutor-1/
+/.cursor-tutor/
+/.cursor/
+/.docker/
+/.dokken/
+/.gsutil/
+/.krew/
+/.kube/
+/.local/share/direnv/
+/.local/share/fish/
+/.local/share/nvim/
+/.local/share/omf/
+/.local/share/rtx/
+/.local/share/uv/
+/.local/state/
+/.logseq/
+/.minikube/
+/.npm/
+/.rd/
+/.rest-client/
+/.rustup/
+/.solargraph/
+/.ssh/
+/.swiftpm/
+/.terraform.d/
+/.tldrc/
+/.vim/
+/.vscode/
+/.wakatime/
+/.yarn/
+/.zsh_sessions/
+/Applications/
+/Code/
+/cw_sql_proxy/
+/Desktop/
+/dotfiles/
+/go/pkg/
+/Library/
+/Movies/
+/Pictures/
+/Music/
+/Sites/
