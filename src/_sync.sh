@@ -10,7 +10,7 @@ generate_sync_list() {
 	local output_file="$3"
 	local exclude_file="${4-}" # Optional exclude file
 
-	local rsync_opts=(-avzn --delete)
+	local rsync_opts=(-avzn)
 
 	# Add exclude file if provided
 	if [[ -n ${exclude_file} ]] && [[ -f ${exclude_file} ]]; then
