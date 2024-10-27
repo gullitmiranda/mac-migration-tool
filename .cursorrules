@@ -1,0 +1,33 @@
+version: 1
+rules:
+  - name: Preserve whitespace and quotes
+    pattern: ".*"
+    rule: |
+      # Preserve leading/trailing whitespace
+      - preserve_leading_whitespace: true
+      - preserve_trailing_whitespace: true
+
+      # Preserve single and double quotes
+      - preserve_quotes: true
+
+      # Preserve empty lines
+      - preserve_empty_lines: true
+
+      # Preserve indentation
+      - preserve_indentation: true
+
+  - name: Preserve shell script syntax
+    pattern: '.*\.(sh|bash)$'
+    rule: |
+      # Preserve shell variable syntax
+      - preserve_pattern: '\$\{.*?\}'
+
+      # Preserve command substitution syntax
+      - preserve_pattern: '\$\(.*?\)'
+
+      # Preserve shell array syntax
+      - preserve_pattern: '\$\{.*?[@*]}'
+
+      # Prefer braces around variable references
+      - replace_pattern: '\$([a-zA-Z_][a-zA-Z0-9_]*)'
+        replacement: '${$1}'
