@@ -80,8 +80,8 @@ if [[ ! -f "${EXCLUDE_FILE}" ]]; then
 fi
 
 log_info "Cleaning sync log: ${SYNC_LOG}"
-log_info "Using exclude file: ${EXCLUDE_FILE}"
 log_info "Saving cleaned log to: ${SYNC_FILTER_LOG}"
+log_info "Using exclude file: ${EXCLUDE_FILE}"
 
 # Function to convert gitignore pattern to grep pattern
 gitignore_to_grep() {
@@ -92,28 +92,42 @@ gitignore_to_grep() {
   if [[ -z "$pattern" || "$pattern" == \#* ]]; then
     return
   fi
+
+  # Remove leading '/' if present
+  pattern=$(echo "$pattern" | sed 's|^/||')
   # Escape special characters for grep
-  pattern=$(echo "$pattern" | sed 's/[[\.*^$/]/\\&/g')
+  pattern=$(echo "$pattern" | sed 's/[[\.*^$\/]/\\&/g')
   # Convert gitignore wildcards to grep wildcards
   pattern=$(echo "$pattern" | sed 's/\?/./g; s/\*/.*/g')
-  # Add start and end anchors
-  echo "^[+.] .*${pattern}.*$"
+  # Return the pattern
+  echo "${pattern}"
 }
 
-# Build grep command from exclude file
-grep_command="grep -v"
+grep_patterns=()
 while IFS= read -r pattern || [ -n "$pattern" ]; do
   grep_pattern=$(gitignore_to_grep "$pattern")
   if [[ -n "$grep_pattern" ]]; then
-    grep_command+=" -e '${grep_pattern}'"
+    grep_patterns+=("${grep_pattern}")
   fi
 done <"$EXCLUDE_FILE"
 
+# Build grep command from exclude file - http://www.staroceans.org/e-book/understanding-the-output-of-rsync-itemize-changes.html
+# https://regex101.com/r/ZhCLNG/3
+regex_prefix="^[<>ch.*fdLDScstpogua].+ "
+grep_patterns_joined=$(
+  IFS="|"
+  echo "${grep_patterns[*]}"
+)
+grep_full_regex="${regex_prefix}(${grep_patterns_joined})"
+grep_command="grep -v -E '${grep_full_regex}'"
+
 # Execute grep command on the log file
 log_info "Cleaning log file..."
-if eval "${grep_command}" "$SYNC_LOG" >"${SYNC_FILTER_LOG}"; then
-  log_info "Log file cleaned successfully. Cleaned log saved to: ${SYNC_FILTER_LOG}"
-else
+# Run the rsync command and capture the output and exit status
+log_verbose_run_command "\"${grep_command}\" \"${SYNC_LOG}\" >\"${SYNC_FILTER_LOG}\" 2>&1"
+if ! eval "${grep_command}" "$SYNC_LOG" >"${SYNC_FILTER_LOG}" 2>&1; then
   log_error "Failed to clean log file."
   exit 1
+else
+  log_info "Log file cleaned successfully. Cleaned log saved to: ${SYNC_FILTER_LOG}"
 fi

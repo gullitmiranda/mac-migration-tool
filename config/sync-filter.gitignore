@@ -21,6 +21,7 @@
 /.gsutil/
 /.krew/
 /.kube/
+/.local/state/mise/
 /.local/share/direnv/
 /.local/share/fish/
 /.local/share/nvim/
