@@ -107,14 +107,6 @@ done
 # Set LOG_LABEL for the main script
 export LOG_LABEL="mac-migrate"
 
-# Check if required parameters are provided
-if [[ -z ${NEW_MAC_IP} || -z ${USERNAME} ]]; then
-	log_error "Error: IP address and username are required."
-	log_info "To get the IP address, run: ifconfig | grep 'inet ' | grep -v 127.0.0.1 | awk '{print $2}'"
-	log_info "To get the username, run: whoami"
-	usage
-fi
-
 # Handle output directory
 if [[ -z ${OUTPUT_DIR} ]]; then
 	OUTPUT_DIR=$(mktemp -d /tmp/mac-migrate.XXXXXX)
@@ -218,6 +210,15 @@ fi
 
 if ${INSTALL_APPS}; then
 	log_info "Installing apps on new Mac..."
+
+	# Check if required parameters are provided
+	if [[ -z ${NEW_MAC_IP} || -z ${USERNAME} ]]; then
+		log_error "Error: IP address and username are required."
+		log_info "To get the IP address, run: ifconfig | grep 'inet ' | grep -v 127.0.0.1 | awk '{print $2}'"
+		log_info "To get the username, run: whoami"
+		usage
+	fi
+
 	if [[ ${DRY_RUN} == true ]]; then
 		log_info "[DRY RUN] Would run install_apps.sh on the new Mac"
 	else
