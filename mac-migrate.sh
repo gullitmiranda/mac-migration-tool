@@ -81,8 +81,10 @@ fi
 
 # Export common variables
 export DRY_RUN
-export OUTPUT_DIR
 export VERBOSE
+export OUTPUT_DIR
+export SCRIPT_DIR
+export CLI_NAME
 
 # Check for subcommand
 if [[ $# -eq 0 ]]; then

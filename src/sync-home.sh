@@ -15,15 +15,20 @@ usage() {
 	cat <<EOF
 Sync home folder to the destination MacBook.
 
-Usage: ${CLI_NAME} sync-home [OPTIONS]
+Usage: ${CLI_NAME} sync-home [OPTIONS] [USER@]HOST:[DEST]
+
+Arguments:
+  [USER@]HOST:[DEST]         Destination in rsync format. DEST is optional and defaults to ~/
 
 Options:
-  --host HOST               Specify the destination host (default: ${HOST_DEST})
-  --username USERNAME       Specify the username for sync (default: ${USERNAME})
   -x, --exclude-file FILE   Specify exclude file for rsync (default: ${DEFAULT_SYNC_HOME_EXCLUDE_FILE})
+  -d, --dry-run             Perform a dry run without making changes
   -h, --help                Display this help message
 EOF
 }
+
+# Set exclude file if not specified
+EXCLUDE_FILE="${EXCLUDE_FILE:-${DEFAULT_SYNC_HOME_EXCLUDE_FILE}}"
 
 # Parse command-specific options
 while [[ $# -gt 0 ]]; do
@@ -32,40 +37,55 @@ while [[ $# -gt 0 ]]; do
 		EXCLUDE_FILE="$2"
 		shift 2
 		;;
-	--host)
-		HOST_DEST="$2"
-		shift 2
-		;;
-	--username)
-		USERNAME="$2"
-		shift 2
+	-d | --dry-run)
+		DRY_RUN=true
+		shift
 		;;
 	-h | --help)
 		usage
 		exit 0
 		;;
 	*)
-		echo "Unknown option: $1" >&2
-		usage
-		exit 1
+		if [[ -z "${DESTINATION}" ]]; then
+			DESTINATION="$1"
+			shift
+		else
+			echo "Unknown option: $1" >&2
+			usage
+			exit 1
+		fi
 		;;
 	esac
 done
-
-# Use the default exclude file if not specified
-EXCLUDE_FILE="${EXCLUDE_FILE:-${DEFAULT_SYNC_HOME_EXCLUDE_FILE}}"
 
 # Create a log file for rsync output
 SYNC_HOME_LOG="${OUTPUT_DIR}/sync-home.log"
 
 # Check if required options are set
-if ! check_required_options "--host HOST_DEST" "--username USERNAME" "--exclude-file EXCLUDE_FILE"; then
+if [[ -z "${DESTINATION}" ]]; then
+	log_error "Destination not specified."
 	usage
 	exit 1
 fi
 
+# Parse the destination
+if [[ "${DESTINATION}" =~ ^([^@]+@)?([^:]+)(:(.*))?$ ]]; then
+	USERNAME="${BASH_REMATCH[1]%@}"
+	HOST_DEST="${BASH_REMATCH[2]}"
+	DEST_PATH="${BASH_REMATCH[4]}"
+else
+	log_error "Invalid destination format. Use [USER@]HOST:[DEST]"
+	usage
+	exit 1
+fi
+
+# Set default destination path if not provided
+DEST_PATH="${DEST_PATH:-~/}"
+
+FULL_DESTINATION="${USERNAME}@${HOST_DEST}:${DEST_PATH}"
+
 log_info "Starting home folder sync process..."
-log_info "  - Target: ${USERNAME}@${HOST_DEST}"
+log_info "  - Target: ${FULL_DESTINATION}"
 log_info "  - Exclude file: ${EXCLUDE_FILE}"
 log_info "  - Sync log: ${SYNC_HOME_LOG}"
 
@@ -89,7 +109,7 @@ rsync_cmd+=" --exclude-from=\"${EXCLUDE_FILE}\""
 # Add options for better error handling and reporting
 rsync_cmd+=" --itemize-changes --stats"
 
-rsync_cmd+=" ~/ \"${USERNAME}@${HOST_DEST}:~/\""
+rsync_cmd+=" ~/ \"${FULL_DESTINATION}\""
 
 if [[ ${DRY_RUN} == true ]]; then
 	log_info "Previewing sync operation..."
@@ -98,7 +118,7 @@ else
 	log_info "Starting sync operation..."
 fi
 
-log_warning "ATTENTION: Maybe you will be prompted to enter the password for ${USERNAME} on the destination Mac."
+log_warning "ATTENTION: You may be prompted to enter the password for ${USERNAME:-your account} on the destination Mac."
 
 # Run the rsync command and capture the output and exit status
 log_verbose_run_command "${rsync_cmd} >${SYNC_HOME_LOG} 2>&1"
@@ -122,6 +142,8 @@ if ! eval "${rsync_cmd}" >"${SYNC_HOME_LOG}" 2>&1; then
 			log_error "Authentication failed. Please check your SSH key or password and try again."
 		elif grep -q "connection unexpectedly closed" "${SYNC_HOME_LOG}"; then
 			log_error "Connection was unexpectedly closed. Please check your network connection and try again."
+		elif grep -q "No such file or directory" "${SYNC_HOME_LOG}"; then
+			log_error "Destination directory does not exist. Please check the path and try again."
 		fi
 
 		exit 1

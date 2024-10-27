@@ -45,7 +45,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# Set default Brewfile if not specified
+# Set Brewfile if not specified
 BREWFILE="${BREWFILE:-${DEFAULT_BREWFILE}}"
 
 # Check if required options are set
