@@ -25,12 +25,16 @@ Options:
   -x, --exclude-file FILE    Specify exclude file for rsync (default: ${DEFAULT_SYNC_HOME_EXCLUDE_FILE})
   -p, --partial VALUE        Enable/disable partial file transfer support (true/false, default: ${MM_DEFAULT_SYNC_PARTIAL})
   -d, --dry-run              Perform a dry run without making changes
+  -n, --no-edit              Skip editing the sync list before proceeding
+  -r, --resume VALUE         Resume behavior for partial and previous syncs (yes/no/ask, default: ask)
 $(usage_global_options || true)
 
 Environment variables:
   MM_SYNC_HOME_EXCLUDE_FILE  Path to exclude file
   MM_SYNC_PARTIAL            Enable/disable partial transfer support (default: ${MM_DEFAULT_SYNC_PARTIAL})
   MM_SYNC_HOME_DRY_RUN       Set to "true" for dry run mode
+  MM_SYNC_NOT_EDIT           Set to "true" to skip editing the sync list
+  MM_SYNC_RESUME             Resume behavior (yes/no/ask, default: ask)
 $(usage_global_env_vars || true)
 
 EOF
@@ -40,6 +44,8 @@ EOF
 : "${MM_SYNC_HOME_EXCLUDE_FILE:=${DEFAULT_SYNC_HOME_EXCLUDE_FILE}}"
 : "${MM_SYNC_HOME_DRY_RUN:=false}"
 : "${MM_SYNC_PARTIAL:=${MM_DEFAULT_SYNC_PARTIAL}}"
+: "${MM_SYNC_NOT_EDIT:=false}"
+: "${MM_SYNC_RESUME:=ask}"
 
 # Parse command-specific options
 while [[ $# -gt 0 ]]; do
@@ -60,6 +66,19 @@ while [[ $# -gt 0 ]]; do
 	-d | --dry-run)
 		MM_SYNC_HOME_DRY_RUN=true
 		shift
+		;;
+	-n | --no-edit)
+		MM_SYNC_NOT_EDIT=true
+		shift
+		;;
+	-r | --resume)
+		if [[ $2 =~ ^(yes|no|ask)$ ]]; then
+			MM_SYNC_RESUME="$2"
+			shift 2
+		else
+			log_error "Invalid value for --resume: $2 (must be 'yes', 'no', or 'ask')"
+			exit 1
+		fi
 		;;
 	-h | --help)
 		usage
@@ -108,6 +127,8 @@ log_debug "  Target: ${FULL_DESTINATION}"
 log_debug "  Exclude file: ${MM_SYNC_HOME_EXCLUDE_FILE}"
 log_debug "  Dry run: ${MM_SYNC_HOME_DRY_RUN}"
 log_debug "  Partial transfer: ${MM_SYNC_PARTIAL}"
+log_debug "  Skip edit: ${MM_SYNC_NOT_EDIT}"
+log_debug "  Resume mode: ${MM_SYNC_RESUME}"
 
 # Execute sync based on mode
 if [[ ${MM_SYNC_HOME_DRY_RUN} == true ]]; then
@@ -120,7 +141,7 @@ if [[ ${MM_SYNC_HOME_DRY_RUN} == true ]]; then
 	generate_sync_list "${SOURCE_PATH}" "${FULL_DESTINATION}" "${SYNC_LIST_FILE}" "${MM_SYNC_HOME_EXCLUDE_FILE}"
 	exit $?
 else
-	# Perform full sync
-	sync_directory "${SOURCE_PATH}" "${FULL_DESTINATION}" "${SYNC_TYPE}" "${MM_SYNC_HOME_EXCLUDE_FILE}"
+	# Perform full sync with partial setting
+	sync_directory "${SOURCE_PATH}" "${FULL_DESTINATION}" "${SYNC_TYPE}" "${MM_SYNC_HOME_EXCLUDE_FILE}" "${MM_SYNC_PARTIAL}"
 	exit $?
 fi

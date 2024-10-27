@@ -31,8 +31,8 @@ perform_sync() {
 	local dest_path="$2"
 	local output_file="$3"
 	local exclude_file="${4-}"
-	local partial="${5:-false}"
-	local sync_dir="${6-}" # New parameter for sync directory
+	local partial="${5:-true}"
+	local sync_dir="${6-}"
 
 	local rsync_opts=(-avz --progress)
 
@@ -92,6 +92,7 @@ sync_directory() {
 	local dest_path="$2"
 	local sync_type="${3:-sync}"
 	local exclude_file="${4-}"
+	local partial="${5:-true}"
 
 	# Validate inputs
 	if [[ ! -e ${source_path} ]]; then
@@ -105,12 +106,31 @@ sync_directory() {
 
 	# Check for partial files from previous syncs
 	local partial_dir="${sync_dir}/partial"
-	if [[ -d ${partial_dir} ]] && ls -A "${partial_dir}" >/dev/null 2>&1; then
+	local latest_files
+	local timestamp
+
+	# Only show partial files message if directory exists AND contains files
+	# trunk-ignore(shellcheck/SC2312)
+	if [[ -d ${partial_dir} ]] && [[ -n "$(ls -A "${partial_dir}" 2>/dev/null)" ]]; then
 		log_warning "Found partial files from previous sync attempts"
 		log_info "Partial files directory: ${partial_dir}"
-		read -p "Do you want to resume using partial files? [y/N] " -n 1 -r
-		echo
-		if [[ ${REPLY} =~ ^[Yy]$ ]]; then
+
+		local should_resume="no"
+		case "${MM_SYNC_RESUME}" in
+		yes)
+			should_resume="yes"
+			;;
+		no)
+			should_resume="no"
+			;;
+		*)
+			read -p "Do you want to resume using partial files? [y/N] " -n 1 -r
+			echo
+			[[ ${REPLY} =~ ^[Yy]$ ]] && should_resume="yes"
+			;;
+		esac
+
+		if [[ ${should_resume} == "yes" ]]; then
 			resume_sync "${source_path}" "${dest_path}" "${sync_type}" "${exclude_file}"
 			return $?
 		else
@@ -119,10 +139,6 @@ sync_directory() {
 			mkdir -p "${partial_dir}"
 		fi
 	fi
-
-	# Check for existing sync files
-	local latest_files
-	local timestamp
 
 	if ! latest_files=$(get_latest_sync_files "${sync_type}" "${MM_OUTPUT_DIR}"); then
 		return 1
@@ -133,9 +149,23 @@ sync_directory() {
 		if [[ -f ${latest_log} ]]; then
 			timestamp=$(basename "${latest_rsync}" .rsync | cut -d'_' -f2)
 			log_info "Found previous sync attempt from ${timestamp}"
-			read -p "Do you want to resume the previous sync? [y/N] " -n 1 -r
-			echo
-			if [[ ${REPLY} =~ ^[Yy]$ ]]; then
+
+			local should_resume="no"
+			case "${MM_SYNC_RESUME}" in
+			yes)
+				should_resume="yes"
+				;;
+			no)
+				should_resume="no"
+				;;
+			*)
+				read -p "Do you want to resume the previous sync? [y/N] " -n 1 -r
+				echo
+				[[ ${REPLY} =~ ^[Yy]$ ]] && should_resume="yes"
+				;;
+			esac
+
+			if [[ ${should_resume} == "yes" ]]; then
 				resume_sync "${source_path}" "${dest_path}" "${sync_type}" "${exclude_file}" "${timestamp}"
 				return $?
 			fi
@@ -148,7 +178,9 @@ sync_directory() {
 	local log_file="${sync_dir}/sync_${timestamp}.log"
 
 	# Step 1: Generate and show sync list
-	log_info "Analyzing changes..."
+	log_info "Building list of changes to be synced..."
+	log_debug "List of changes to be synced: \"${sync_list_file}\""
+
 	generate_sync_list "${source_path}" "${dest_path}" "${sync_list_file}" "${exclude_file}"
 
 	if [[ ! -s ${sync_list_file} ]]; then
@@ -156,21 +188,25 @@ sync_directory() {
 		return 0
 	fi
 
-	log_info "Review the sync list at: ${sync_list_file}"
-	log_info "Changes to be made:"
-	cat "${sync_list_file}"
-
-	# Step 2: Confirm with user
-	read -p "Proceed with sync? [y/N] " -n 1 -r
-	echo
-	if [[ ! ${REPLY} =~ ^[Yy]$ ]]; then
-		log_info "Sync cancelled"
-		return 0
+	log_info "Review the list of changes to be synced and make the necessary changes."
+	if [[ ${MM_SYNC_NOT_EDIT} != "true" ]]; then
+		read -p "Do you want to edit the sync list before proceeding? [Y/n/a] " -n 1 -r
+		echo
+		if [[ ${REPLY} =~ ^[Nn]$ ]]; then
+			:
+		elif [[ ${REPLY} =~ ^[Aa]$ ]]; then
+			log_info "Sync cancelled, you can resume later"
+			return 0
+		else
+			${EDITOR:-vi} "${sync_list_file}"
+		fi
 	fi
 
 	# Step 3: Perform sync
 	log_info "Starting sync..."
-	if perform_sync "${source_path}" "${dest_path}" "${log_file}" "${exclude_file}" "false" "${sync_dir}"; then
+	log_debug "Sync log: ${log_file}"
+
+	if perform_sync "${source_path}" "${dest_path}" "${log_file}" "${exclude_file}" "${partial}" "${sync_dir}"; then
 		log_info "Sync completed successfully"
 		log_info "Log file: ${log_file}"
 		return 0
