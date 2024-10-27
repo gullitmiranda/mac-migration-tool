@@ -109,7 +109,12 @@ Use './mac-migrate.sh <command> --help' for more information about a specific co
 1. Sync home folder:
 
    ```bash
-   ./mac-migrate.sh sync-home --host 192.168.1.100 --username johndoe --dry-run
+   ./mac-migrate.sh sync-home [USER@]HOST:[DEST] --dry-run
+   ```
+
+   For example:
+   ```bash
+   ./mac-migrate.sh sync-home johndoe@NewMac.local:~/ --dry-run
    ```
 
 2. Analyze sync log:
@@ -149,7 +154,7 @@ Always back up your data before performing a migration. This tool comes with no 
 1. Perform a dry run of the home folder sync:
 
    ```bash
-   ./mac-migrate.sh sync-home --host NEW_MAC_IP --username YOUR_USERNAME --dry-run
+   ./mac-migrate.sh sync-home [USER@]HOST:[DEST] --dry-run
    ```
 
 2. Analyze the sync log to review what will be transferred:
@@ -166,7 +171,7 @@ Always back up your data before performing a migration. This tool comes with no 
 
 4. After reviewing and adjusting as needed, run the actual home folder sync:
    ```bash
-   ./mac-migrate.sh sync-home --host NEW_MAC_IP --username YOUR_USERNAME
+   ./mac-migrate.sh sync-home [USER@]HOST:[DEST] --dry-run
    ```
 
 ### Applications Migration
