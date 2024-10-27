@@ -8,10 +8,10 @@ source "$(dirname "$0")/../config/config.sh"
 export LOG_LABEL="${LOG_LABEL:+${LOG_LABEL}:}apps-brew-install"
 
 # Check if required environment variables are set
-check_required_vars "DEFAULT_BREWFILE" "CLI_NAME"
+check_required_vars "CLI_NAME" "DEFAULT_BREWFILE"
 
-# Set default Brewfile
-DEFAULT_BREWFILE="${OUTPUT_DIR}/Brewfile"
+# Set Brewfile if not specified
+BREWFILE="${BREWFILE:-${DEFAULT_BREWFILE}}"
 
 # Function to display usage
 usage() {
@@ -21,7 +21,7 @@ Install applications using Homebrew and Brewfile.
 Usage: ${CLI_NAME} apps-brew-install [OPTIONS]
 
 Options:
-  -f, --file FILE    Specify Brewfile (default: ${DEFAULT_BREWFILE})
+  -f, --file FILE    Specify Brewfile (default: ${BREWFILE})
   -h, --help         Display this help message
 EOF
 }
@@ -44,9 +44,6 @@ while [[ $# -gt 0 ]]; do
     ;;
   esac
 done
-
-# Set Brewfile if not specified
-BREWFILE="${BREWFILE:-${DEFAULT_BREWFILE}}"
 
 # Check if required options are set
 if ! check_required_options "--file BREWFILE"; then

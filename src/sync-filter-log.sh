@@ -8,11 +8,11 @@ source "$(dirname "$0")/_utils.sh"
 source "$(dirname "$0")/../config/config.sh"
 
 # Check if required environment variables are set
-check_required_vars "DEFAULT_SYNC_HOME_LOG" "DEFAULT_SYNC_FILTER_EXCLUDE_FILE" "CLI_NAME"
+check_required_vars "CLI_NAME" "DEFAULT_SYNC_HOME_LOG" "DEFAULT_SYNC_FILTER_EXCLUDE_FILE"
 
 # Default values
-SYNC_LOG="${DEFAULT_SYNC_HOME_LOG}"
-EXCLUDE_FILE="${DEFAULT_SYNC_FILTER_EXCLUDE_FILE}"
+SYNC_LOG="${SYNC_LOG:-${DEFAULT_SYNC_HOME_LOG}}"
+EXCLUDE_FILE="${EXCLUDE_FILE:-${DEFAULT_SYNC_FILTER_EXCLUDE_FILE}}"
 
 # Function to display usage
 usage() {
@@ -22,9 +22,9 @@ Clean the sync log file by removing entries matching patterns in the exclude fil
 Usage: ${CLI_NAME} sync-filter-log [OPTIONS]
 
 Options:
-  -e, --exclude FILE    Specify exclude file for filtering (default: ${EXCLUDE_FILE})
   -i, --input FILE      Specify input sync log file (default: ${SYNC_LOG})
   -o, --output FILE     Specify output file for cleaned log (default: <input-file>-filtered.log)
+  -e, --exclude FILE    Specify exclude file for filtering (default: ${EXCLUDE_FILE})
   -h, --help            Display this help message
 EOF
 }

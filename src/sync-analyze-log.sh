@@ -11,9 +11,9 @@ source "$(dirname "$0")/../config/config.sh"
 check_required_vars "CLI_NAME" "DEFAULT_SYNC_HOME_LOG" "DEFAULT_MAX_DEPTH"
 
 # Default values
-SYNC_LOG="${DEFAULT_SYNC_HOME_LOG}"
-MAX_DEPTH="${DEFAULT_MAX_DEPTH}"
-SHOW_ALL=false
+SYNC_LOG="${SYNC_LOG:-${DEFAULT_SYNC_HOME_LOG}}"
+MAX_DEPTH="${MAX_DEPTH:-${DEFAULT_MAX_DEPTH}}"
+SHOW_ALL="${SHOW_ALL:-false}"
 
 # Function to display usage
 usage() {

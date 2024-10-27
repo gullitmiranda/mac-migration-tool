@@ -7,10 +7,10 @@ source "$(dirname "$0")/_utils.sh"
 export LOG_LABEL="${LOG_LABEL:+${LOG_LABEL}:}apps-brew-export"
 
 # Check if required environment variables are set
-check_required_vars "OUTPUT_DIR" "CLI_NAME"
+check_required_vars "CLI_NAME" "DEFAULT_BREWFILE"
 
-# Set default output file
-DEFAULT_BREWFILE="${OUTPUT_DIR}/Brewfile"
+# Set default output file if not specified
+BREWFILE="${BREWFILE:-${DEFAULT_BREWFILE}}"
 
 # Function to display usage
 usage() {
@@ -20,7 +20,7 @@ Export list of installed apps using Homebrew.
 Usage: ${CLI_NAME} apps-brew-export [OPTIONS]
 
 Options:
-  -f, --file FILE    Specify output Brewfile (default: ${DEFAULT_BREWFILE})
+  -f, --file FILE    Specify output Brewfile (default: ${BREWFILE})
   -h, --help         Display this help message
 EOF
 }
@@ -43,9 +43,6 @@ while [[ $# -gt 0 ]]; do
     ;;
   esac
 done
-
-# Set default output file if not specified
-BREWFILE="${BREWFILE:-${DEFAULT_BREWFILE}}"
 
 # Check if required options are set
 if ! check_required_options "--file BREWFILE"; then

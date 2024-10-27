@@ -96,10 +96,9 @@ Commands:
   apps-brew-install   Install apps on the new MacBook using Homebrew
 
 Common options:
-  -o, --output-dir DIR      Specify output directory for artifacts
-  -d, --dry-run             Perform a dry run without making changes
-  -v, --verbose             Enable verbose output
-  -h, --help                Display this help message
+  -d, --dry-run       Perform a dry run without making changes
+  -v, --verbose       Enable verbose output
+  -h, --help          Display this help message
 
 Use './mac-migrate.sh <command> --help' for more information about a specific command.
 ```
@@ -112,33 +111,53 @@ Use './mac-migrate.sh <command> --help' for more information about a specific co
    ./mac-migrate.sh sync-home [USER@]HOST:[DEST] [OPTIONS]
    ```
 
-   For example:
+   Options:
+
+   - `-o, --output FILE`: Specify output log file
+   - `-x, --exclude-file FILE`: Specify exclude file for rsync
+   - `-d, --dry-run`: Perform a dry run without making changes
+
+   Example:
+
    ```bash
-   ./mac-migrate.sh sync-home johndoe@NewMac.local --dry-run
+   ./mac-migrate.sh sync-home johndoe@NewMac.local --dry-run --output /tmp/mac-migrate/sync-home.log
    ```
 
 2. Analyze sync log:
 
    ```bash
-   ./mac-migrate.sh sync-analyze-log -i /path/to/sync.log
+   ./mac-migrate.sh sync-analyze-log --input /tmp/mac-migrate/sync-home.log [OPTIONS]
    ```
+
+   Options:
+
+   - `-i, --input FILE`: Specify input sync log file
+   - `-o, --output FILE`: Specify analysis output file
+   - `-d, --max-depth NUM`: Maximum directory depth to display
+   - `-a, --all`: Show all changes, including synced files
 
 3. Filter sync log:
 
    ```bash
-   ./mac-migrate.sh sync-filter-log -i /path/to/sync.log -e /path/to/exclude.txt
+   ./mac-migrate.sh sync-filter-log --input /tmp/mac-migrate/sync-home.log [OPTIONS]
    ```
+
+   Options:
+
+   - `-i, --input FILE`: Specify input sync log file
+   - `-o, --output FILE`: Specify output file for cleaned log
+   - `-e, --exclude FILE`: Specify exclude file for filtering
 
 4. Export installed apps:
 
    ```bash
-   ./mac-migrate.sh apps-brew-export -f /path/to/Brewfile
+   ./mac-migrate.sh apps-brew-export --file /tmp/mac-migrate/Brewfile
    ```
 
 5. Install apps on the new Mac:
 
    ```bash
-   ./mac-migrate.sh apps-brew-install -f /path/to/Brewfile
+   ./mac-migrate.sh apps-brew-install --file /tmp/mac-migrate/Brewfile
    ```
 
 ## Recommended Migration Steps
@@ -154,24 +173,24 @@ Always back up your data before performing a migration. This tool comes with no 
 1. Perform a dry run of the home folder sync:
 
    ```bash
-   ./mac-migrate.sh -v --output-dir /tmp/mac-migrate/ sync-home gullitmiranda@GullitMirandas-MacBook-Pro.local --dry-run
+   ./mac-migrate.sh -v sync-home gullitmiranda@GullitMirandas-MacBook-Pro.local --dry-run --output /tmp/mac-migrate/sync-home.log
    ```
 
 2. Analyze the sync log to review what will be transferred:
 
    ```bash
-   ./mac-migrate.sh -v --output-dir /tmp/mac-migrate/ sync-analyze-log
+   ./mac-migrate.sh -v sync-analyze-log --input /tmp/mac-migrate/sync-home.log
    ```
 
 3. Filter the sync log to focus on specific items or exclude unwanted files:
 
    ```bash
-   ./mac-migrate.sh -v --output-dir /tmp/mac-migrate/ sync-filter-log
+   ./mac-migrate.sh -v sync-filter-log --input /tmp/mac-migrate/sync-home.log
    ```
 
 4. After reviewing and adjusting as needed, run the actual home folder sync:
    ```bash
-   ./mac-migrate.sh -v --output-dir /tmp/mac-migrate/ sync-home gullitmiranda@GullitMirandas-MacBook-Pro.local
+   ./mac-migrate.sh -v sync-home gullitmiranda@GullitMirandas-MacBook-Pro.local --output /tmp/mac-migrate/sync-home.log
    ```
 
 ### Applications Migration
@@ -179,14 +198,14 @@ Always back up your data before performing a migration. This tool comes with no 
 1. Export the list of installed applications on the old Mac:
 
    ```bash
-   ./mac-migrate.sh -v --output-dir /tmp/mac-migrate/ apps-brew-export
+   ./mac-migrate.sh apps-brew-export --file /tmp/mac-migrate/Brewfile
    ```
 
-2. Review the generated Brewfile in the output directory to ensure the list is accurate.
+2. Review the generated Brewfile to ensure the list is accurate.
 
 3. Install the exported applications on the new Mac:
    ```bash
-   ./mac-migrate.sh -v --output-dir /tmp/mac-migrate/ apps-brew-install -f /path/to/Brewfile
+   ./mac-migrate.sh apps-brew-install --file /tmp/mac-migrate/Brewfile
    ```
 
 By following these steps, you can ensure a thorough and controlled migration process, allowing you to review and adjust the migration at each stage.

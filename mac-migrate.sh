@@ -28,10 +28,9 @@ Commands:
   apps-brew-install   Install apps on the new MacBook
 
 Common options:
-  -o, --output-dir DIR      Specify output directory for artifacts
-  -d, --dry-run             Perform a dry run without making changes
-  -v, --verbose             Enable verbose output
-  -h, --help                Display this help message
+  -d, --dry-run       Perform a dry run without making changes
+  -v, --verbose       Enable verbose output
+  -h, --help          Display this help message
 
 Use '${CLI_NAME} <command> --help' for more information about a command.
 EOF
@@ -40,10 +39,6 @@ EOF
 # Parse common options
 while [[ $# -gt 0 ]]; do
 	case $1 in
-	-o | --output-dir)
-		OUTPUT_DIR="$2"
-		shift 2
-		;;
 	-d | --dry-run)
 		DRY_RUN=true
 		shift
@@ -62,29 +57,11 @@ while [[ $# -gt 0 ]]; do
 	esac
 done
 
-# Handle output directory
-if [[ -z ${OUTPUT_DIR} ]]; then
-	OUTPUT_DIR=$(mktemp -d /tmp/mac-migrate.XXXXXX)
-	# log_info "No output directory specified. Using temporary directory: ${OUTPUT_DIR}"
-elif [[ -d ${OUTPUT_DIR} ]]; then
-	read -p "Output directory \"${OUTPUT_DIR}\" already exists. Do you want to override it? (y/n) " -n 1 -r
-	echo
-	if [[ ! ${REPLY} =~ ^[Yy]$ ]]; then
-		log_error "Aborting due to existing output directory."
-		exit 1
-	fi
-	rm -rf "${OUTPUT_DIR}"
-	mkdir -p "${OUTPUT_DIR}"
-else
-	mkdir -p "${OUTPUT_DIR}"
-fi
-
 # Export common variables
-export DRY_RUN
-export VERBOSE
-export OUTPUT_DIR
 export SCRIPT_DIR
 export CLI_NAME
+export DRY_RUN
+export VERBOSE
 
 # Check for subcommand
 if [[ $# -eq 0 ]]; then

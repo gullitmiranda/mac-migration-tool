@@ -8,7 +8,11 @@ source "$(dirname "$0")/_utils.sh"
 source "$(dirname "$0")/../config/config.sh"
 
 # Check if required environment variables are set
-check_required_vars "OUTPUT_DIR" "CLI_NAME" "DEFAULT_SYNC_HOME_EXCLUDE_FILE"
+check_required_vars "CLI_NAME" "DEFAULT_SYNC_HOME_LOG" "DEFAULT_SYNC_HOME_EXCLUDE_FILE"
+
+# Set default values
+SYNC_HOME_LOG="${SYNC_HOME_LOG:-${DEFAULT_SYNC_HOME_LOG}}"
+EXCLUDE_FILE="${EXCLUDE_FILE:-${DEFAULT_SYNC_HOME_EXCLUDE_FILE}}"
 
 # Function to display usage
 usage() {
@@ -21,14 +25,12 @@ Arguments:
   [USER@]HOST:[DEST]         Destination in rsync format. DEST is optional and defaults to ~/
 
 Options:
-  -x, --exclude-file FILE   Specify exclude file for rsync (default: ${DEFAULT_SYNC_HOME_EXCLUDE_FILE})
+  -o, --output FILE         Specify output log file (default: ${SYNC_HOME_LOG})
+  -x, --exclude-file FILE   Specify exclude file for rsync (default: ${EXCLUDE_FILE})
   -d, --dry-run             Perform a dry run without making changes
   -h, --help                Display this help message
 EOF
 }
-
-# Set exclude file if not specified
-EXCLUDE_FILE="${EXCLUDE_FILE:-${DEFAULT_SYNC_HOME_EXCLUDE_FILE}}"
 
 # Parse command-specific options
 while [[ $# -gt 0 ]]; do
@@ -40,6 +42,10 @@ while [[ $# -gt 0 ]]; do
 	-d | --dry-run)
 		DRY_RUN=true
 		shift
+		;;
+	-o | --output)
+		SYNC_HOME_LOG="$2"
+		shift 2
 		;;
 	-h | --help)
 		usage
@@ -57,9 +63,6 @@ while [[ $# -gt 0 ]]; do
 		;;
 	esac
 done
-
-# Create a log file for rsync output
-SYNC_HOME_LOG="${OUTPUT_DIR}/sync-home.log"
 
 # Check if required options are set
 if [[ -z "${DESTINATION}" ]]; then
@@ -86,8 +89,8 @@ FULL_DESTINATION="${USERNAME}@${HOST_DEST}:${DEST_PATH}"
 
 log_info "Starting home folder sync process..."
 log_info "  - Target: ${FULL_DESTINATION}"
-log_info "  - Exclude file: ${EXCLUDE_FILE}"
 log_info "  - Sync log: ${SYNC_HOME_LOG}"
+log_info "  - Exclude file: ${EXCLUDE_FILE}"
 
 if [[ ${DRY_RUN} == true ]]; then
 	log_info "  - Mode: Dry run (no changes will be made)"
