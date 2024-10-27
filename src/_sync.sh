@@ -41,7 +41,13 @@ perform_sync() {
 	local partial="${5:-true}"
 	local sync_dir="${6-}"
 
-	local rsync_opts=(-avz --progress)
+	# Base rsync options with safer defaults
+	local rsync_opts=(
+		-avz            # archive, verbose, compress
+		--progress      # show progress
+		--ignore-errors # skip files with errors
+		--protect-args  # better handling of filenames with spaces
+	)
 
 	# Add SSH control options
 	rsync_opts+=(-e "ssh $(get_ssh_opts)")
@@ -58,12 +64,45 @@ perform_sync() {
 		rsync_opts+=(
 			--partial-dir="${partial_dir}"
 			--partial
+			--keep-partial # keep partial files on interrupt
+			--timeout=180  # set timeout to 3 minutes
 		)
 	fi
 
 	# Handle both files and directories
 	if [[ -d ${source_path} ]]; then
-		rsync "${rsync_opts[@]}" "${source_path}/" "${dest_path}/" >"${output_file}" 2>&1
+		# For directories, try up to 3 times with increasing timeouts
+		local attempt=1
+		local max_attempts=3
+		local success=false
+
+		while ((attempt <= max_attempts)) && ! ${success}; do
+			log_info "Sync attempt ${attempt}/${max_attempts}..."
+
+			if rsync "${rsync_opts[@]}" "${source_path}/" "${dest_path}/" >"${output_file}.${attempt}" 2>&1; then
+				success=true
+				cat "${output_file}.${attempt}" >"${output_file}"
+			else
+				local exit_code=$?
+				# Only retry on specific error codes (23: partial transfer, 30: timeout)
+				if [[ ${exit_code} -eq 23 || ${exit_code} -eq 30 ]] && ((attempt < max_attempts)); then
+					log_warning "Attempt ${attempt} failed (code ${exit_code}), retrying in 5 seconds..."
+					sleep 5
+					# Increase timeout for next attempt
+					rsync_opts+=(--timeout=$((180 + attempt * 60)))
+				else
+					cat "${output_file}.${attempt}" >"${output_file}"
+					return "${exit_code}"
+				fi
+			fi
+			((attempt++))
+		done
+
+		if ${success}; then
+			return 0
+		else
+			return 1
+		fi
 	else
 		rsync "${rsync_opts[@]}" "${source_path}" "${dest_path}" >"${output_file}" 2>&1
 	fi
