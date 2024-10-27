@@ -152,7 +152,11 @@ STATE_FILE="${OUTPUT_DIR}/migration_state.txt"
 
 # Function to update state
 update_state() {
-	echo "$1" >>"${STATE_FILE}"
+	if [[ ${DRY_RUN} != true ]]; then
+		echo "$1" >>"${STATE_FILE}"
+	# else
+	# 	log_info "[DRY RUN] Would update state: $1"
+	fi
 }
 
 # Function to check if a step has been completed
