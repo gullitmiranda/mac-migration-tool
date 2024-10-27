@@ -24,8 +24,8 @@ Commands:
   sync-home           Sync home folder
   sync-analyze-log    Analyze sync log
   sync-filter-log     Filter sync log
-  apps-export         Export list of installed apps
-  apps-install        Install apps on the new MacBook
+  apps-brew-export    Export list of installed apps
+  apps-brew-install   Install apps on the new MacBook
 
 Common options:
   -o, --output-dir DIR      Specify output directory for artifacts
@@ -103,11 +103,11 @@ sync-analyze-log)
 sync-filter-log)
 	bash "${SCRIPT_DIR}/src/sync-filter-log.sh" "$@"
 	;;
-apps-export)
-	bash "${SCRIPT_DIR}/src/apps-export.sh" "$@"
+apps-brew-export)
+	source "${SCRIPT_DIR}/src/apps-brew-export.sh"
 	;;
-apps-install)
-	bash "${SCRIPT_DIR}/src/apps-install.sh" "$@"
+apps-brew-install)
+	source "${SCRIPT_DIR}/src/apps-brew-install.sh"
 	;;
 # For now this is a hidden command
 settings-migrate)

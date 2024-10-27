@@ -7,6 +7,9 @@ export LOG_LABEL="${LOG_LABEL:+${LOG_LABEL}:}sync-analyze-log"
 source "$(dirname "$0")/_utils.sh"
 source "$(dirname "$0")/../config/config.sh"
 
+# Check if required environment variables are set
+check_required_vars "CLI_NAME" "DEFAULT_SYNC_HOME_LOG" "DEFAULT_MAX_DEPTH"
+
 # Default values
 SYNC_LOG="${DEFAULT_SYNC_HOME_LOG}"
 MAX_DEPTH="${DEFAULT_MAX_DEPTH}"
@@ -20,7 +23,7 @@ Analyze the sync log to identify files and directories that were not synchronize
 Usage: ${CLI_NAME} sync-analyze-log [OPTIONS]
 
 Options:
-  -i, --input-log FILE  Specify input sync log file (default: ${SYNC_LOG})
+  -i, --input FILE      Specify input sync log file (default: ${SYNC_LOG})
   -o, --output FILE     Specify analysis output file (default: <input-file>-analyzed.log)
   -d, --max-depth NUM   Maximum directory depth to display (default: ${MAX_DEPTH})
   -a, --all             Show all changes, including synced files (default: only show unsynced)
@@ -31,7 +34,7 @@ EOF
 # Parse command-line arguments
 while [[ $# -gt 0 ]]; do
   case $1 in
-  -i | --input-log)
+  -i | --input)
     SYNC_LOG="$2"
     shift 2
     ;;
@@ -58,6 +61,12 @@ while [[ $# -gt 0 ]]; do
     ;;
   esac
 done
+
+# Check if required options are set
+if ! check_required_options "--input SYNC_LOG" "--max-depth MAX_DEPTH"; then
+  usage
+  exit 1
+fi
 
 # Set SYNC_ANALYZE_LOG based on SYNC_LOG if not defined
 if [[ -z "${SYNC_ANALYZE_LOG}" ]]; then

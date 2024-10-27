@@ -48,3 +48,25 @@ check_required_vars() {
 		exit 1
 	fi
 }
+
+# Function to check if required options are set
+check_required_options() {
+	local missing_options=()
+
+	for item in "$@"; do
+		local option_name="${item%% *}"
+		local var_name="${item#* }"
+
+		if [[ -z "${!var_name}" ]]; then
+			missing_options+=("$option_name")
+		fi
+	done
+
+	if [[ ${#missing_options[@]} -gt 0 ]]; then
+		log_error "The following required options are not set: ${missing_options[*]}"
+		log_error "Please provide all required options."
+		return 1
+	fi
+
+	return 0
+}
