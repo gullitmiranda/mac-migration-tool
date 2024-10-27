@@ -136,9 +136,55 @@ Use './mac-migrate.sh <command> --help' for more information about a specific co
    ./mac-migrate.sh apps-install
    ```
 
-## Caution
+## Recommended Migration Steps
+
+For a smooth migration process, follow these recommended steps:
+
+### Caution
 
 Always back up your data before performing a migration. This tool comes with no warranties, and you use it at your own risk.
+
+### Home Folder Migration
+
+1. Perform a dry run of the home folder sync:
+
+   ```bash
+   ./mac-migrate.sh sync-home --dry-run
+   ```
+
+2. Analyze the sync log to review what will be transferred:
+
+   ```bash
+   ./mac-migrate.sh sync-analyze-log
+   ```
+
+3. Filter the sync log to focus on specific items or exclude unwanted files:
+
+   ```bash
+   ./mac-migrate.sh sync-filter-log
+   ```
+
+4. After reviewing and adjusting as needed, run the actual home folder sync:
+   ```bash
+   ./mac-migrate.sh sync-home
+   ```
+
+### Applications Migration
+
+1. Export the list of installed applications on the old Mac:
+
+   ```bash
+   ./mac-migrate.sh apps-export
+   ```
+
+2. Review the generated artifacts in the output directory to ensure the list is accurate.
+
+3. Install the exported applications on the new Mac:
+   ```bash
+   ./mac-migrate.sh apps-install
+   ```
+
+By following these steps, you can ensure a thorough and controlled migration process, allowing you to review and adjust the migration at each stage.
 
 ## Contributing
 
