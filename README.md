@@ -86,21 +86,23 @@ That's it! You're ready to use the migration tool.
 The main script `mac-migrate.sh` provides several subcommands for different migration tasks:
 
 ```bash
-./mac-migrate.sh <command> [OPTIONS]
+./mac-migrate.sh [OPTIONS] <command>
 
 Commands:
   sync-home           Sync home folder
   sync-analyze-log    Analyze sync log
   sync-filter-log     Filter sync log
-  apps-brew-export    Export list of installed apps using Homebrew
-  apps-brew-install   Install apps on the new MacBook using Homebrew
+  apps-brew-export    Export list of installed apps
+  apps-brew-install   Install apps on the new MacBook
 
-Common options:
-  -d, --dry-run       Perform a dry run without making changes
+Global options:
+  -o, --output-dir    Specify output directory (default: "~/mac-migrate")
   -v, --verbose       Enable verbose output
-  -h, --help          Display this help message
+  -h, --help         Display this help message
 
-Use './mac-migrate.sh <command> --help' for more information about a specific command.
+Global environment variables:
+  MM_OUTPUT_DIR      Directory for output files (default: "~/mac-migrate")
+  MM_VERBOSE         Set to "true" to enable verbose output
 ```
 
 ### Examples
@@ -108,25 +110,31 @@ Use './mac-migrate.sh <command> --help' for more information about a specific co
 1. Sync home folder:
 
    ```bash
-   ./mac-migrate.sh sync-home [USER@]HOST:[DEST] [OPTIONS]
+   ./mac-migrate.sh sync-home [OPTIONS] [USER@]HOST:[DEST]
    ```
 
    Options:
 
-   - `-o, --output FILE`: Specify output log file
    - `-x, --exclude-file FILE`: Specify exclude file for rsync
+   - `-p, --partial VALUE`: Enable/disable partial file transfer support (true/false)
    - `-d, --dry-run`: Perform a dry run without making changes
+
+   Environment variables:
+
+   - `MM_SYNC_HOME_EXCLUDE_FILE`: Path to exclude file
+   - `MM_SYNC_PARTIAL`: Enable/disable partial transfer support
+   - `MM_SYNC_HOME_DRY_RUN`: Set to "true" for dry run mode
 
    Example:
 
    ```bash
-   ./mac-migrate.sh sync-home johndoe@NewMac.local --dry-run --output /tmp/mac-migrate/sync-home.log
+   ./mac-migrate.sh -v sync-home johndoe@NewMac.local --dry-run
    ```
 
 2. Analyze sync log:
 
    ```bash
-   ./mac-migrate.sh sync-analyze-log --input /tmp/mac-migrate/sync-home.log [OPTIONS]
+   ./mac-migrate.sh sync-analyze-log [OPTIONS]
    ```
 
    Options:
@@ -139,7 +147,7 @@ Use './mac-migrate.sh <command> --help' for more information about a specific co
 3. Filter sync log:
 
    ```bash
-   ./mac-migrate.sh sync-filter-log --input /tmp/mac-migrate/sync-home.log [OPTIONS]
+   ./mac-migrate.sh sync-filter-log [OPTIONS]
    ```
 
    Options:
@@ -151,64 +159,30 @@ Use './mac-migrate.sh <command> --help' for more information about a specific co
 4. Export installed apps:
 
    ```bash
-   ./mac-migrate.sh apps-brew-export --file /tmp/mac-migrate/Brewfile
+   ./mac-migrate.sh apps-brew-export [OPTIONS]
    ```
+
+   Options:
+
+   - `-f, --file FILE`: Specify output file for Brewfile
 
 5. Install apps on the new Mac:
 
    ```bash
-   ./mac-migrate.sh apps-brew-install --file /tmp/mac-migrate/Brewfile
+   ./mac-migrate.sh apps-brew-install [OPTIONS]
    ```
+
+   Options:
+
+   - `-f, --file FILE`: Specify input file for Brewfile
 
 ## Recommended Migration Steps
 
-For a smooth migration process, follow these recommended steps:
-
-### Caution
-
-Always back up your data before performing a migration. This tool comes with no warranties, and you use it at your own risk.
-
-### Home Folder Migration
-
-1. Perform a dry run of the home folder sync:
+1. Perform the home folder sync:
 
    ```bash
-   ./mac-migrate.sh -v sync-home gullitmiranda@GullitMirandas-MacBook-Pro.local --dry-run --output /tmp/mac-migrate/sync-home.log
+   ./mac-migrate.sh -v sync-home gullitmiranda@GullitMirandas-MacBook-Pro.local
    ```
-
-2. Analyze the sync log to review what will be transferred:
-
-   ```bash
-   ./mac-migrate.sh -v sync-analyze-log
-   ```
-
-3. Filter the sync log to focus on specific items or exclude unwanted files:
-
-   ```bash
-   ./mac-migrate.sh -v sync-filter-log
-   ```
-
-4. After reviewing and adjusting as needed, run the actual home folder sync:
-   ```bash
-   ./mac-migrate.sh -v sync-home gullitmiranda@GullitMirandas-MacBook-Pro.local --output /tmp/mac-migrate/sync-home.log
-   ```
-
-### Applications Migration
-
-1. Export the list of installed applications on the old Mac:
-
-   ```bash
-   ./mac-migrate.sh apps-brew-export
-   ```
-
-2. Review the generated Brewfile to ensure the list is accurate.
-
-3. Install the exported applications on the new Mac:
-   ```bash
-   ./mac-migrate.sh apps-brew-install
-   ```
-
-By following these steps, you can ensure a thorough and controlled migration process, allowing you to review and adjust the migration at each stage.
 
 ## Contributing
 

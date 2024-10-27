@@ -5,14 +5,11 @@ export LOG_LABEL="${LOG_LABEL:+${LOG_LABEL}:}sync-home"
 
 # Source utility functions and config
 source "$(dirname "$0")/_utils.sh"
+source "$(dirname "$0")/_sync.sh"
 source "$(dirname "$0")/../config/config.sh"
 
 # Check if required environment variables are set
-check_required_vars "CLI_NAME" "DEFAULT_SYNC_HOME_LOG" "DEFAULT_SYNC_HOME_EXCLUDE_FILE"
-
-# Set default values
-SYNC_HOME_LOG="${SYNC_HOME_LOG:-${DEFAULT_SYNC_HOME_LOG}}"
-EXCLUDE_FILE="${EXCLUDE_FILE:-${DEFAULT_SYNC_HOME_EXCLUDE_FILE}}"
+check_required_vars "CLI_NAME" "MM_OUTPUT_DIR"
 
 # Function to display usage
 usage() {
@@ -25,28 +22,44 @@ Arguments:
   [USER@]HOST:[DEST]         Destination in rsync format. DEST is optional and defaults to ~/
 
 Options:
-  -o, --output FILE          Specify output log file (default: ${DEFAULT_SYNC_HOME_LOG})
   -x, --exclude-file FILE    Specify exclude file for rsync (default: ${DEFAULT_SYNC_HOME_EXCLUDE_FILE})
+  -p, --partial VALUE        Enable/disable partial file transfer support (true/false, default: ${MM_DEFAULT_SYNC_PARTIAL})
   -d, --dry-run              Perform a dry run without making changes
 $(usage_global_options || true)
 
+Environment variables:
+  MM_SYNC_HOME_EXCLUDE_FILE  Path to exclude file
+  MM_SYNC_PARTIAL            Enable/disable partial transfer support (default: ${MM_DEFAULT_SYNC_PARTIAL})
+  MM_SYNC_HOME_DRY_RUN       Set to "true" for dry run mode
+$(usage_global_env_vars || true)
+
 EOF
 }
+
+# Environment variables that can be configured externally
+: "${MM_SYNC_HOME_EXCLUDE_FILE:=${DEFAULT_SYNC_HOME_EXCLUDE_FILE}}"
+: "${MM_SYNC_HOME_DRY_RUN:=false}"
+: "${MM_SYNC_PARTIAL:=${MM_DEFAULT_SYNC_PARTIAL}}"
 
 # Parse command-specific options
 while [[ $# -gt 0 ]]; do
 	case $1 in
 	-x | --exclude-file)
-		EXCLUDE_FILE="$2"
+		MM_SYNC_HOME_EXCLUDE_FILE="$2"
 		shift 2
+		;;
+	-p | --partial)
+		if [[ $2 =~ ^(true|false)$ ]]; then
+			MM_SYNC_PARTIAL="$2"
+			shift 2
+		else
+			log_error "Invalid value for --partial: $2 (must be 'true' or 'false')"
+			exit 1
+		fi
 		;;
 	-d | --dry-run)
-		DRY_RUN=true
+		MM_SYNC_HOME_DRY_RUN=true
 		shift
-		;;
-	-o | --output)
-		SYNC_HOME_LOG="$2"
-		shift 2
 		;;
 	-h | --help)
 		usage
@@ -57,7 +70,7 @@ while [[ $# -gt 0 ]]; do
 			DESTINATION="$1"
 			shift
 		else
-			echo "Unknown option: $1" >&2
+			log_error "Unknown option: $1"
 			usage
 			exit 1
 		fi
@@ -65,109 +78,49 @@ while [[ $# -gt 0 ]]; do
 	esac
 done
 
-# Check if required options are set
+# Validate destination format
 if [[ -z ${DESTINATION} ]]; then
-	log_error "Destination not specified."
+	log_error "Destination not specified"
 	usage
 	exit 1
 fi
 
-# Parse the destination
-if [[ ${DESTINATION} =~ ^([^@]+@)?([^:]+)(:(.*))?$ ]]; then
-	USERNAME="${BASH_REMATCH[1]%@}"
-	HOST_DEST="${BASH_REMATCH[2]}"
-	DEST_PATH="${BASH_REMATCH[4]}"
-else
+if [[ ! ${DESTINATION} =~ ^([^@]+@)?([^:]+)(:(.*))?$ ]]; then
 	log_error "Invalid destination format. Use [USER@]HOST:[DEST]"
 	usage
 	exit 1
 fi
 
-# Set default destination path if not provided
-DEST_PATH="${DEST_PATH:-~/}"
-
+# Parse destination components
+USERNAME="${BASH_REMATCH[1]%@}"
+HOST_DEST="${BASH_REMATCH[2]}"
+DEST_PATH="${BASH_REMATCH[4]:-~/}"
 FULL_DESTINATION="${USERNAME}@${HOST_DEST}:${DEST_PATH}"
 
-log_info "Starting home folder sync process..."
-log_info "  - Target: ${FULL_DESTINATION}"
-log_info "  - Sync log: ${SYNC_HOME_LOG}"
-log_info "  - Exclude file: ${EXCLUDE_FILE}"
+# Setup sync configuration
+SOURCE_PATH="${HOME}"
+SYNC_TYPE="sync-home"
 
-mkdir_parent "${SYNC_HOME_LOG}"
+# Log debug information
+log_debug "Configuration:"
+log_debug "  Source: ${SOURCE_PATH}"
+log_debug "  Target: ${FULL_DESTINATION}"
+log_debug "  Exclude file: ${MM_SYNC_HOME_EXCLUDE_FILE}"
+log_debug "  Dry run: ${MM_SYNC_HOME_DRY_RUN}"
+log_debug "  Partial transfer: ${MM_SYNC_PARTIAL}"
 
-if [[ ${DRY_RUN} == true ]]; then
-	log_info "  - Mode: Dry run (no changes will be made)"
+# Execute sync based on mode
+if [[ ${MM_SYNC_HOME_DRY_RUN} == true ]]; then
+	# Generate sync list only
+	TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+	SYNC_DIR="${MM_OUTPUT_DIR}/${SYNC_TYPE}"
+	mkdir -p "${SYNC_DIR}"
+
+	SYNC_LIST_FILE="${SYNC_DIR}/sync_${TIMESTAMP}.rsync"
+	generate_sync_list "${SOURCE_PATH}" "${FULL_DESTINATION}" "${SYNC_LIST_FILE}" "${MM_SYNC_HOME_EXCLUDE_FILE}"
+	exit $?
 else
-	log_info "  - Mode: Live run"
-fi
-
-# Prepare rsync command
-rsync_cmd="rsync -az"
-
-# Add verbose flag if VERBOSE is true
-if [[ ${VERBOSE} == true ]]; then
-	rsync_cmd+="v"
-fi
-
-# Add exclude file to rsync command
-rsync_cmd+=" --exclude-from=\"${EXCLUDE_FILE}\""
-
-# Add options for better error handling and reporting
-rsync_cmd+=" --itemize-changes --stats"
-
-rsync_cmd+=" ~/ \"${FULL_DESTINATION}\""
-
-if [[ ${DRY_RUN} == true ]]; then
-	log_info "Previewing sync operation..."
-	rsync_cmd+=" --dry-run"
-else
-	log_info "Starting sync operation..."
-fi
-
-log_warning "ATTENTION: You may be prompted to enter the password for ${USERNAME:-your account} on the destination Mac."
-
-# Run the rsync command and capture the output and exit status
-log_verbose_run_command "${rsync_cmd} >${SYNC_HOME_LOG} 2>&1"
-if ! eval "${rsync_cmd}" >"${SYNC_HOME_LOG}" 2>&1; then
-	# Check if the process was interrupted by the user
-	if grep -q "rsync error: received SIGINT, SIGTERM, or SIGHUP" "${SYNC_HOME_LOG}"; then
-		log_warning "Sync process was interrupted. No changes were made."
-		exit 2
-	else
-		log_error "Home folder sync encountered errors."
-		log_error "Please check ${SYNC_HOME_LOG} for full details."
-
-		# Display the last few lines of the log file, which often contain error messages
-		log_error "Last few lines of the log file:"
-		tail -n 10 "${SYNC_HOME_LOG}" | while IFS= read -r line; do
-			log_error "  ${line}"
-		done || true
-
-		# Check for specific error messages and provide more informative output
-		if grep -q "Too many authentication failures" "${SYNC_HOME_LOG}"; then
-			log_error "Authentication failed. Please check your SSH key or password and try again."
-		elif grep -q "connection unexpectedly closed" "${SYNC_HOME_LOG}"; then
-			log_error "Connection was unexpectedly closed. Please check your network connection and try again."
-		elif grep -q "No such file or directory" "${SYNC_HOME_LOG}"; then
-			log_error "Destination directory does not exist. Please check the path and try again."
-		fi
-
-		exit 1
-	fi
-else
-	if [[ ${DRY_RUN} == true ]]; then
-		log_info "Sync preview completed successfully. No changes were made."
-	else
-		log_info "Home folder sync completed successfully!"
-	fi
-
-	# Extract and display statistics
-	read -r TOTAL_FILES < <(grep "Number of files transferred" "${SYNC_HOME_LOG}" | awk '{print $5}') || true
-	TOTAL_FILES=${TOTAL_FILES:-N/A}
-	read -r TOTAL_SIZE < <(grep "Total transferred file size" "${SYNC_HOME_LOG}" | awk '{print $5, $6}') || true
-	TOTAL_SIZE=${TOTAL_SIZE:-N/A}
-
-	log_info "Sync Statistics:"
-	log_info "  - Total files transferred: ${TOTAL_FILES}"
-	log_info "  - Total data transferred: ${TOTAL_SIZE}"
+	# Perform full sync
+	sync_directory "${SOURCE_PATH}" "${FULL_DESTINATION}" "${SYNC_TYPE}" "${MM_SYNC_HOME_EXCLUDE_FILE}"
+	exit $?
 fi

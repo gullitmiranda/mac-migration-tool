@@ -15,6 +15,9 @@ DEFAULT_SYNC_HOME_EXCLUDE_FILE="${SCRIPT_DIR}/config/sync-home.gitignore"
 # Default values for sync-home.sh
 DEFAULT_SYNC_HOME_LOG="${MM_OUTPUT_DIR}/sync-home.log"
 
+# Default sync options
+MM_DEFAULT_SYNC_PARTIAL=true
+
 # Default values for sync-analyze-log.sh
 DEFAULT_MAX_DEPTH=3
 
