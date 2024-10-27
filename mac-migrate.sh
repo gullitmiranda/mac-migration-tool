@@ -18,6 +18,7 @@ OUTPUT_DIR=""
 EXCLUDE_FILE=""
 VERBOSE=false
 ANALYZE_SYNC_LOG=false
+CLEAN_SYNC_LOG=false
 
 # Default exclude file path
 DEFAULT_EXCLUDE_FILE="${SCRIPT_DIR}/config/sync_home.gitignore"
@@ -47,6 +48,9 @@ Migrate settings options:
 
 Analyze sync log options:
   -A, --analyze-sync-log    Analyze sync log after sync
+
+Clean sync log options:
+  -C, --clean-sync-log    Clean the sync log after analysis
 
 Common options:
   -o, --output-dir DIR      Specify output directory for artifacts
@@ -103,6 +107,10 @@ while [[ $# -gt 0 ]]; do
 	-h | --help) usage ;;
 	-A | --analyze-sync-log)
 		ANALYZE_SYNC_LOG=true
+		shift
+		;;
+	-C | --clean-sync-log)
+		CLEAN_SYNC_LOG=true
 		shift
 		;;
 	*)
@@ -219,6 +227,11 @@ fi
 if [[ ${ANALYZE_SYNC_LOG} == true ]]; then
 	log_info "Analyzing sync log..."
 	bash "${SCRIPT_DIR}/src/analyze_sync_log.sh"
+fi
+
+if [[ ${CLEAN_SYNC_LOG} == true ]]; then
+	log_info "Cleaning sync log..."
+	bash "${SCRIPT_DIR}/src/clean_sync_log.sh"
 fi
 
 if ${INSTALL_APPS}; then
