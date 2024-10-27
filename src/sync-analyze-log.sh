@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# trunk-ignore-all(shellcheck/SC2155)
+# trunk-ignore-all(shellcheck/SC2312)
+
 # Set LOG_LABEL for this script
 export LOG_LABEL="${LOG_LABEL:+${LOG_LABEL}:}sync-analyze-log"
 
@@ -87,14 +90,14 @@ mkdir_parent "${SYNC_ANALYZE_LOG}"
 # Function to get the depth of a file path
 get_depth() {
 	local path="$1"
-	echo "$path" | tr -cd '/' | wc -c
+	echo "${path}" | tr -cd '/' | wc -c
 }
 
 # Function to log messages to both console and file
 log_both() {
 	local message="$1"
-	log_info "$message"
-	echo "$message" >>"$SYNC_ANALYZE_LOG"
+	log_info "${message}"
+	echo "${message}" >>"${SYNC_ANALYZE_LOG}"
 }
 
 # Function to analyze the rsync log
@@ -104,73 +107,76 @@ analyze_rsync_log() {
 	local total_unsynced=0
 
 	# Clear the analysis log file
-	>"$SYNC_ANALYZE_LOG"
+	echo -n "" >"${SYNC_ANALYZE_LOG}"
 
 	while IFS= read -r line; do
-		if [[ $line =~ ^[[:alpha:]*]+ ]]; then
+		if [[ ${line} =~ ^[[:alpha:]*]+ ]]; then
 			local change_type="${line:0:1}"
 			local file_path="${line#* }"
-			local depth=$(get_depth "$file_path")
+			local depth=$(get_depth "${file_path}")
 
 			if ((depth <= MAX_DEPTH)); then
-				case $change_type in
+				case "${change_type}" in
 				">")
-					if [[ $SHOW_ALL == true ]]; then
-						log_both "File transferred: $file_path"
+					if [[ ${SHOW_ALL} == true ]]; then
+						log_both "File transferred: ${file_path}"
 					fi
 					;;
 				"c")
-					if [[ $SHOW_ALL == true ]]; then
-						log_both "File changed: $file_path"
+					if [[ ${SHOW_ALL} == true ]]; then
+						log_both "File changed: ${file_path}"
 					fi
 					;;
 				"*")
-					log_both "File deleted: $file_path"
+					log_both "File deleted: ${file_path}"
 					((total_unsynced++))
 					;;
 				".")
-					if [[ $SHOW_ALL == true ]]; then
-						log_both "File attributes changed: $file_path"
+					if [[ ${SHOW_ALL} == true ]]; then
+						log_both "File attributes changed: ${file_path}"
 					fi
 					;;
 				"h")
-					if [[ $SHOW_ALL == true ]]; then
-						log_both "Hardlink: $file_path"
+					if [[ ${SHOW_ALL} == true ]]; then
+						log_both "Hardlink: ${file_path}"
 					fi
 					;;
 				"?")
-					log_both "Unknown change: $file_path"
+					log_both "Unknown change: ${file_path}"
 					((total_unsynced++))
+					;;
+				*)
+					log_both "Unknown change type: ${change_type}"
 					;;
 				esac
 			fi
 
 			((total_changes++))
-		elif [[ $line == *"skipping non-regular file"* ]]; then
-			local item=$(echo "$line" | sed -E 's/.*skipping non-regular file "(.+)"/\1/')
-			local depth=$(get_depth "$item")
+		elif [[ ${line} == *"skipping non-regular file"* ]]; then
+			local item=$(echo "${line}" | sed -E 's/.*skipping non-regular file "(.+)"/\1/')
+			local depth=$(get_depth "${item}")
 
 			if ((depth <= MAX_DEPTH)); then
-				log_both "Skipped non-regular file: $item"
+				log_both "Skipped non-regular file: ${item}"
 			fi
 
 			((total_skipped++))
 			((total_unsynced++))
-		elif [[ $line == *"file has vanished:"* ]]; then
-			local item=$(echo "$line" | sed -E 's/.*file has vanished: "(.+)"/\1/')
-			local depth=$(get_depth "$item")
+		elif [[ ${line} == *"file has vanished:"* ]]; then
+			local item=$(echo "${line}" | sed -E 's/.*file has vanished: "(.+)"/\1/')
+			local depth=$(get_depth "${item}")
 
 			if ((depth <= MAX_DEPTH)); then
-				log_both "File vanished: $item"
+				log_both "File vanished: ${item}"
 			fi
 
 			((total_unsynced++))
-		elif [[ $line == *"permission denied"* ]]; then
-			local item=$(echo "$line" | sed -E 's/.*permission denied (.+)/\1/')
-			local depth=$(get_depth "$item")
+		elif [[ ${line} == *"permission denied"* ]]; then
+			local item=$(echo "${line}" | sed -E 's/.*permission denied (.+)/\1/')
+			local depth=$(get_depth "${item}")
 
 			if ((depth <= MAX_DEPTH)); then
-				log_both "Permission denied: $item"
+				log_both "Permission denied: ${item}"
 			fi
 
 			((total_unsynced++))

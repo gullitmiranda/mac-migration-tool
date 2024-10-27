@@ -89,29 +89,29 @@ mkdir_parent "${SYNC_FILTER_LOG}"
 gitignore_to_grep() {
 	local pattern="$1"
 	# Remove leading and trailing whitespace
-	pattern=$(echo "$pattern" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+	pattern=$(echo "${pattern}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
 	# Ignore empty lines and comments
-	if [[ -z $pattern || $pattern == \#* ]]; then
+	if [[ -z ${pattern} || ${pattern} == \#* ]]; then
 		return
 	fi
 
 	# Remove leading '/' if present
-	pattern=$(echo "$pattern" | sed 's|^/||')
+	pattern=${pattern#/}
 	# Escape special characters for grep
-	pattern=$(echo "$pattern" | sed 's/[[\.*^$\/]/\\&/g')
+	pattern=${pattern//[\.*^$\/]/\\&}
 	# Convert gitignore wildcards to grep wildcards
-	pattern=$(echo "$pattern" | sed 's/\?/./g; s/\*/.*/g')
+	pattern=$(echo "${pattern}" | sed 's/\?/./g; s/\*/.*/g')
 	# Return the pattern
 	echo "${pattern}"
 }
 
 grep_patterns=()
-while IFS= read -r pattern || [ -n "$pattern" ]; do
-	grep_pattern=$(gitignore_to_grep "$pattern")
-	if [[ -n $grep_pattern ]]; then
+while IFS= read -r pattern || [[ -n ${pattern} ]]; do
+	grep_pattern=$(gitignore_to_grep "${pattern}")
+	if [[ -n ${grep_pattern} ]]; then
 		grep_patterns+=("${grep_pattern}")
 	fi
-done <"$EXCLUDE_FILE"
+done <"${EXCLUDE_FILE}"
 
 # Build grep command from exclude file - http://www.staroceans.org/e-book/understanding-the-output-of-rsync-itemize-changes.html
 # https://regex101.com/r/ZhCLNG/3
@@ -127,7 +127,7 @@ grep_command="grep -v -E '${grep_full_regex}'"
 log_info "Cleaning log file..."
 # Run the rsync command and capture the output and exit status
 log_verbose_run_command "\"${grep_command}\" \"${SYNC_LOG}\" >\"${SYNC_FILTER_LOG}\" 2>&1"
-if ! eval "${grep_command}" "$SYNC_LOG" >"${SYNC_FILTER_LOG}" 2>&1; then
+if ! eval "${grep_command}" "${SYNC_LOG}" >"${SYNC_FILTER_LOG}" 2>&1; then
 	log_error "Failed to clean log file."
 	exit 1
 else

@@ -103,7 +103,7 @@ Common options:
 Use './mac-migrate.sh <command> --help' for more information about a specific command.
 ```
 
-### Examples:
+### Examples
 
 1. Sync home folder:
 
