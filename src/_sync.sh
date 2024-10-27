@@ -3,6 +3,11 @@
 # Source utility functions
 source "$(dirname "$0")/_utils.sh"
 
+# Default SSH options for rsync
+get_ssh_opts() {
+	echo "-o ControlMaster=auto -o ControlPath=/tmp/ssh-control-%r@%h:%p -o ControlPersist=yes"
+}
+
 # Core function to generate the list of items to be synced
 generate_sync_list() {
 	local source_path="$1"
@@ -11,6 +16,8 @@ generate_sync_list() {
 	local exclude_file="${4-}" # Optional exclude file
 
 	local rsync_opts=(-avzn)
+	# Add SSH control options
+	rsync_opts+=(-e "ssh $(get_ssh_opts)")
 
 	# Add exclude file if provided
 	if [[ -n ${exclude_file} ]] && [[ -f ${exclude_file} ]]; then
@@ -35,6 +42,9 @@ perform_sync() {
 	local sync_dir="${6-}"
 
 	local rsync_opts=(-avz --progress)
+
+	# Add SSH control options
+	rsync_opts+=(-e "ssh $(get_ssh_opts)")
 
 	# Add exclude file if provided
 	if [[ -n ${exclude_file} ]] && [[ -f ${exclude_file} ]]; then

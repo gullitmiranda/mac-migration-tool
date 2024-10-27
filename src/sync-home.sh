@@ -116,6 +116,32 @@ HOST_DEST="${BASH_REMATCH[2]}"
 DEST_PATH="${BASH_REMATCH[4]:-~/}"
 FULL_DESTINATION="${USERNAME}@${HOST_DEST}:${DEST_PATH}"
 
+# Add after parsing the destination components
+# Setup SSH control connection
+setup_ssh_connection() {
+	local host="$1"
+	local user="$2"
+
+	local target="${user:+${user}@}${host}"
+	log_debug "Setting up SSH control connection to ${target}"
+
+	# Test SSH connection and establish control socket
+	local ssh_opts
+	ssh_opts=$(get_ssh_opts)
+
+	# Capture both stdout and stderr
+	local output
+	# trunk-ignore(shellcheck/SC2086)
+	if ! output=$(ssh ${ssh_opts} -q "${target}" exit 2>&1); then
+		log_error "Failed to establish SSH connection to ${target}"
+		log_debug "SSH output: ${output}"
+		return 1
+	fi
+
+	log_debug "SSH connection established successfully"
+	return 0
+}
+
 # Setup sync configuration
 SOURCE_PATH="${HOME}"
 SYNC_TYPE="sync-home"
@@ -130,6 +156,13 @@ log_debug "  Partial transfer: ${MM_SYNC_PARTIAL}"
 log_debug "  Skip edit: ${MM_SYNC_NOT_EDIT}"
 log_debug "  Resume mode: ${MM_SYNC_RESUME}"
 
+# Add before the sync execution
+# Establish SSH connection first
+if ! setup_ssh_connection "${HOST_DEST}" "${USERNAME}"; then
+	log_error "Failed to establish initial SSH connection. Aborting sync."
+	exit 1
+fi
+
 # Execute sync based on mode
 if [[ ${MM_SYNC_HOME_DRY_RUN} == true ]]; then
 	# Generate sync list only
@@ -138,10 +171,21 @@ if [[ ${MM_SYNC_HOME_DRY_RUN} == true ]]; then
 	mkdir -p "${SYNC_DIR}"
 
 	SYNC_LIST_FILE="${SYNC_DIR}/sync_${TIMESTAMP}.rsync"
-	generate_sync_list "${SOURCE_PATH}" "${FULL_DESTINATION}" "${SYNC_LIST_FILE}" "${MM_SYNC_HOME_EXCLUDE_FILE}"
-	exit $?
+	if ! generate_sync_list "${SOURCE_PATH}" "${FULL_DESTINATION}" "${SYNC_LIST_FILE}" "${MM_SYNC_HOME_EXCLUDE_FILE}"; then
+		log_error "Failed to generate sync list"
+		exit 1
+	fi
+
+	if [[ ! -s ${SYNC_LIST_FILE} ]]; then
+		log_info "No changes to sync"
+		exit 0
+	fi
+	exit 0
 else
 	# Perform full sync with partial setting
-	sync_directory "${SOURCE_PATH}" "${FULL_DESTINATION}" "${SYNC_TYPE}" "${MM_SYNC_HOME_EXCLUDE_FILE}" "${MM_SYNC_PARTIAL}"
-	exit $?
+	if ! sync_directory "${SOURCE_PATH}" "${FULL_DESTINATION}" "${SYNC_TYPE}" "${MM_SYNC_HOME_EXCLUDE_FILE}" "${MM_SYNC_PARTIAL}"; then
+		log_error "Sync failed"
+		exit 1
+	fi
+	exit 0
 fi
