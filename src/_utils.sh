@@ -34,6 +34,12 @@ log_verbose_run_command() {
 	fi
 }
 
+# Make sure that the parent directory exists
+mkdir_parent() {
+	mkdir -p "$(dirname "$1")"
+}
+
+# Check if required environment variables are set
 check_required_vars() {
 	local missing_vars=()
 	for var in "$@"; do
@@ -57,7 +63,7 @@ check_required_options() {
 		local option_name="${item%% *}"
 		local var_name="${item#* }"
 
-		if [[ -z "${!var_name}" ]]; then
+		if [[ -z ${!var_name} ]]; then
 			missing_options+=("$option_name")
 		fi
 	done

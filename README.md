@@ -179,13 +179,13 @@ Always back up your data before performing a migration. This tool comes with no 
 2. Analyze the sync log to review what will be transferred:
 
    ```bash
-   ./mac-migrate.sh -v sync-analyze-log --input /tmp/mac-migrate/sync-home.log
+   ./mac-migrate.sh -v sync-analyze-log
    ```
 
 3. Filter the sync log to focus on specific items or exclude unwanted files:
 
    ```bash
-   ./mac-migrate.sh -v sync-filter-log --input /tmp/mac-migrate/sync-home.log
+   ./mac-migrate.sh -v sync-filter-log
    ```
 
 4. After reviewing and adjusting as needed, run the actual home folder sync:
@@ -198,14 +198,14 @@ Always back up your data before performing a migration. This tool comes with no 
 1. Export the list of installed applications on the old Mac:
 
    ```bash
-   ./mac-migrate.sh apps-brew-export --file /tmp/mac-migrate/Brewfile
+   ./mac-migrate.sh apps-brew-export
    ```
 
 2. Review the generated Brewfile to ensure the list is accurate.
 
 3. Install the exported applications on the new Mac:
    ```bash
-   ./mac-migrate.sh apps-brew-install --file /tmp/mac-migrate/Brewfile
+   ./mac-migrate.sh apps-brew-install
    ```
 
 By following these steps, you can ensure a thorough and controlled migration process, allowing you to review and adjust the migration at each stage.

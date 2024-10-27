@@ -52,7 +52,7 @@ while [[ $# -gt 0 ]]; do
 		exit 0
 		;;
 	*)
-		if [[ -z "${DESTINATION}" ]]; then
+		if [[ -z ${DESTINATION} ]]; then
 			DESTINATION="$1"
 			shift
 		else
@@ -65,14 +65,14 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Check if required options are set
-if [[ -z "${DESTINATION}" ]]; then
+if [[ -z ${DESTINATION} ]]; then
 	log_error "Destination not specified."
 	usage
 	exit 1
 fi
 
 # Parse the destination
-if [[ "${DESTINATION}" =~ ^([^@]+@)?([^:]+)(:(.*))?$ ]]; then
+if [[ ${DESTINATION} =~ ^([^@]+@)?([^:]+)(:(.*))?$ ]]; then
 	USERNAME="${BASH_REMATCH[1]%@}"
 	HOST_DEST="${BASH_REMATCH[2]}"
 	DEST_PATH="${BASH_REMATCH[4]}"
@@ -91,6 +91,8 @@ log_info "Starting home folder sync process..."
 log_info "  - Target: ${FULL_DESTINATION}"
 log_info "  - Sync log: ${SYNC_HOME_LOG}"
 log_info "  - Exclude file: ${EXCLUDE_FILE}"
+
+mkdir_parent "${SYNC_HOME_LOG}"
 
 if [[ ${DRY_RUN} == true ]]; then
 	log_info "  - Mode: Dry run (no changes will be made)"
