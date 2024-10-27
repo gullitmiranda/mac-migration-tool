@@ -46,8 +46,14 @@ perform_sync() {
 		-avz            # archive, verbose, compress
 		--progress      # show progress
 		--ignore-errors # skip files with errors
-		--protect-args  # better handling of filenames with spaces
 	)
+
+	# Add sync directory to exclusions if provided
+	if [[ -n ${sync_dir} ]]; then
+		local rel_sync_dir
+		rel_sync_dir=$(realpath --relative-to="${source_path}" "${sync_dir}")
+		rsync_opts+=(--exclude="${rel_sync_dir}/") # Exclude the sync directory
+	fi
 
 	# Add SSH control options
 	rsync_opts+=(-e "ssh $(get_ssh_opts)")
@@ -64,8 +70,7 @@ perform_sync() {
 		rsync_opts+=(
 			--partial-dir="${partial_dir}"
 			--partial
-			--keep-partial # keep partial files on interrupt
-			--timeout=180  # set timeout to 3 minutes
+			--timeout=180 # set timeout to 3 minutes
 		)
 	fi
 
@@ -109,27 +114,27 @@ perform_sync() {
 }
 
 # Function to get the latest sync files for a sync type
-get_latest_sync_files() {
+get_latest_sync_file() {
 	local sync_type="$1"
 	local output_dir="$2"
 	local latest_rsync
-	local timestamp
 
-	# Find the latest .rsync file in the sync type directory
+	# Ensure directory exists
+	local sync_dir="${output_dir}/${sync_type}"
+
+	# Now get the latest one
 	# trunk-ignore(shellcheck/SC2312)
-	if ! latest_rsync=$(find "${output_dir}/${sync_type}" -name "*.rsync" -type f -printf '%T@ %p\n' 2>/dev/null | sort -nr | head -n1 | cut -d' ' -f2-); then
+	if ! latest_rsync=$(find "${sync_dir}" -name "*.rsync" -type f -exec stat -f "%m %N" {} \; 2>/dev/null | sort -nr | head -n1 | cut -d' ' -f2-); then
 		return 1
 	fi
 
 	if [[ -n ${latest_rsync} ]]; then
-		# Extract the timestamp from the rsync file
-		timestamp=$(basename "${latest_rsync}" .rsync | cut -d'_' -f2)
-
-		# Construct the corresponding log file path
-		local latest_log="${output_dir}/${sync_type}/sync_${timestamp}.log"
-
-		echo "${latest_rsync}:${latest_log}"
+		echo "${latest_rsync}"
 	fi
+}
+
+gen_timestamp() {
+	date +%Y%m%d_%H%M%S
 }
 
 ## Sample implementation
@@ -155,8 +160,7 @@ sync_directory() {
 
 	# Check for partial files from previous syncs
 	local partial_dir="${sync_dir}/partial"
-	local latest_files
-	local timestamp
+	local previous_sync_file
 
 	# Only show partial files message if directory exists AND contains files
 	# trunk-ignore(shellcheck/SC2312)
@@ -189,40 +193,37 @@ sync_directory() {
 		fi
 	fi
 
-	if ! latest_files=$(get_latest_sync_files "${sync_type}" "${MM_OUTPUT_DIR}"); then
+	log_debug "Getting latest sync file for ${sync_type}"
+	if ! previous_sync_file=$(get_latest_sync_file "${sync_type}" "${MM_OUTPUT_DIR}"); then
+		log_error "Error getting latest sync file for ${sync_type}"
 		return 1
-	elif [[ -n ${latest_files} ]]; then
-		local latest_rsync="${latest_files%:*}"
-		local latest_log="${latest_files#*:}"
+	elif [[ -n ${previous_sync_file} ]]; then
+		log_info "Found previous sync attempt ${previous_sync_file}"
 
-		if [[ -f ${latest_log} ]]; then
-			timestamp=$(basename "${latest_rsync}" .rsync | cut -d'_' -f2)
-			log_info "Found previous sync attempt from ${timestamp}"
+		local should_resume="no"
+		case "${MM_SYNC_RESUME}" in
+		yes)
+			should_resume="yes"
+			;;
+		no)
+			should_resume="no"
+			;;
+		*)
+			read -p "Do you want to resume the previous sync? [y/N] " -n 1 -r
+			echo
+			[[ ${REPLY} =~ ^[Yy]$ ]] && should_resume="yes"
+			;;
+		esac
 
-			local should_resume="no"
-			case "${MM_SYNC_RESUME}" in
-			yes)
-				should_resume="yes"
-				;;
-			no)
-				should_resume="no"
-				;;
-			*)
-				read -p "Do you want to resume the previous sync? [y/N] " -n 1 -r
-				echo
-				[[ ${REPLY} =~ ^[Yy]$ ]] && should_resume="yes"
-				;;
-			esac
-
-			if [[ ${should_resume} == "yes" ]]; then
-				resume_sync "${source_path}" "${dest_path}" "${sync_type}" "${exclude_file}" "${timestamp}"
-				return $?
-			fi
+		if [[ ${should_resume} == "yes" ]]; then
+			resume_sync "${source_path}" "${dest_path}" "${sync_type}" "${exclude_file}" "${previous_sync_file}"
+			return $?
 		fi
 	fi
 
 	# Generate new timestamp for a fresh sync
-	timestamp=$(date +%Y%m%d_%H%M%S)
+	local timestamp
+	timestamp=$(gen_timestamp)
 	local sync_list_file="${sync_dir}/sync_${timestamp}.rsync"
 	local log_file="${sync_dir}/sync_${timestamp}.log"
 
@@ -271,20 +272,23 @@ resume_sync() {
 	local dest_path="$2"
 	local sync_type="$3"
 	local exclude_file="$4"
-	local timestamp="${5:-$(date +%Y%m%d_%H%M%S)}"
+	local sync_list_file="$5"
 
-	local sync_dir="${MM_OUTPUT_DIR}/${sync_type}"
+	local file_basename
+	local sync_dir
+	local timestamp
+
+	sync_dir=$(dirname "${sync_list_file}")
+	file_basename=$(basename "${sync_list_file}" .rsync)
+	timestamp=$(gen_timestamp)
+
 	mkdir -p "${sync_dir}"
 
-	local log_file="${sync_dir}/sync_${timestamp}.log"
-	local resume_log="${sync_dir}/sync_${timestamp}_resume.log"
+	local log_file="${sync_dir}/${file_basename}.log"
+	local resume_log="${sync_dir}/${file_basename}_resume_${timestamp}.log"
 
 	log_info "Resuming interrupted sync..."
 	if perform_sync "${source_path}" "${dest_path}" "${resume_log}" "${exclude_file}" "true" "${sync_dir}"; then
-		# Append resume log to original log
-		cat "${resume_log}" >>"${log_file}"
-		rm -f "${resume_log}"
-
 		# Clean up partial directory if sync was successful
 		local partial_dir="${sync_dir}/partial"
 		if [[ -d ${partial_dir} ]]; then
@@ -293,7 +297,7 @@ resume_sync() {
 		fi
 
 		log_info "Resume completed successfully"
-		log_info "Log file: ${log_file}"
+		log_debug "Resume log file: ${resume_log}"
 		return 0
 	else
 		log_error "Resume failed - check log file: ${resume_log}"
