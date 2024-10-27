@@ -21,6 +21,7 @@
 .CFUserTextEncoding
 /Library/Logs/
 /Library/Keychains
+/Library/Saved Application State/
 
 # iCloud syncronization files
 /Library/Accessibility/
