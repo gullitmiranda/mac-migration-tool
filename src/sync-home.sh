@@ -25,10 +25,11 @@ Arguments:
   [USER@]HOST:[DEST]         Destination in rsync format. DEST is optional and defaults to ~/
 
 Options:
-  -o, --output FILE         Specify output log file (default: ${SYNC_HOME_LOG})
-  -x, --exclude-file FILE   Specify exclude file for rsync (default: ${EXCLUDE_FILE})
-  -d, --dry-run             Perform a dry run without making changes
-  -h, --help                Display this help message
+  -o, --output FILE          Specify output log file (default: ${DEFAULT_SYNC_HOME_LOG})
+  -x, --exclude-file FILE    Specify exclude file for rsync (default: ${DEFAULT_SYNC_HOME_EXCLUDE_FILE})
+  -d, --dry-run              Perform a dry run without making changes
+$(usage_global_options || true)
+
 EOF
 }
 

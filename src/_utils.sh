@@ -4,7 +4,8 @@
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
-NC='\033[0m' # No Color
+BLUE='\033[0;34m' # Added blue color for debug messages
+NC='\033[0m'      # No Color
 
 # Logging functions
 log_info() {
@@ -19,6 +20,12 @@ log_error() {
 	echo -e "${RED}[ERROR]${NC}${LOG_LABEL:+ [${LOG_LABEL}]} $1"
 }
 
+log_debug() {
+	if [[ ${MM_VERBOSE} == "true" ]]; then
+		echo -e "${BLUE}[DEBUG]${NC}${LOG_LABEL:+ [${LOG_LABEL}]} $1"
+	fi
+}
+
 # Function to run commands with verbose support
 run_command() {
 	local cmd=("$@")
@@ -29,8 +36,8 @@ run_command() {
 log_verbose_run_command() {
 	local cmd=("$@")
 
-	if [[ ${VERBOSE} == "true" ]]; then
-		log_info "Run: ${cmd[*]}"
+	if [[ ${MM_VERBOSE} == "true" ]]; then
+		log_debug "Run: ${cmd[*]}"
 	fi
 }
 
@@ -64,7 +71,7 @@ check_required_options() {
 		local var_name="${item#* }"
 
 		if [[ -z ${!var_name} ]]; then
-			missing_options+=("$option_name")
+			missing_options+=("${option_name}")
 		fi
 	done
 

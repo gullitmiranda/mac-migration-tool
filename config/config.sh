@@ -1,9 +1,13 @@
 #!/bin/bash
+# trunk-ignore-all(shellcheck/SC2034)
 
 # Handle output directory
-MM_OUTPUT_DIR=${OUTPUT_DIR:-~/mac-migrate}
+MM_DEFAULT_OUTPUT_DIR=~/mac-migrate
 
-check_required_vars "SCRIPT_DIR" "MM_OUTPUT_DIR"
+# Global options
+MM_VERBOSE=${MM_VERBOSE:-false}
+
+check_required_vars "SCRIPT_DIR"
 
 # Default exclude file path for sync-home
 DEFAULT_SYNC_HOME_EXCLUDE_FILE="${SCRIPT_DIR}/config/sync-home.gitignore"
