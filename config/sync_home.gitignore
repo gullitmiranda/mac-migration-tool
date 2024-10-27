@@ -8,10 +8,14 @@
 
 # System and hidden files
 .DS_Store
+.DDLocalBackups/
 .Trash
 .cache
 /Documents
 /Downloads
+/Movies/TV/
+/Music/
+/Public/
 
 .local/share/Trash
 .CFUserTextEncoding
@@ -19,6 +23,7 @@
 /Library/Keychains
 
 # iCloud syncronization files
+/Library/Accessibility/
 /Library/Accounts
 /Library/AppleMediaServices
 /Library/Application Support/AddressBook
@@ -63,6 +68,7 @@
 /Library/DuetExpertCenter
 /Library/Group Containers/com.apple.PreviewLegacySignaturesConversion
 /Library/Group Containers/com.apple.systempreferences.cache
+/Library/Group Containers/EQHXZ8M8AV.group.com.google.drivefs
 /Library/Group Containers/group.com.apple.accessibility.voicebanking
 /Library/Group Containers/group.com.apple.AppleSpell
 /Library/Group Containers/group.com.apple.calendar
@@ -128,3 +134,32 @@
 # *.bak
 # *.swp
 # *.log
+
+## Code ignore
+# node_modules/ # this can break some apps, like Raycast
+/.bundle/cache/
+/.cargo/git/
+/.cargo/registry/
+/.chef-workstation/
+/.chef/gem/
+/.config/gcloud/logs/
+/.docker/buildx/refs/
+/.elm/
+/.gem/
+/.hex/
+/.krew/index/
+/.kube/cache/
+/.kube/http-cache/
+/.local/share/gem/
+/.local/share/mise/
+/.local/share/rtx/
+/.local/share/nvim/
+/.npm/
+/.rustup/
+/.tldrc/
+/.solargraph/
+/.yarn/
+/go/
+/cw_sql_proxy/
+/.swiftpm/
+/.local/var/log/
