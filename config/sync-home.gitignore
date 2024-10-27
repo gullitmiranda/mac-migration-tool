@@ -124,6 +124,7 @@
 /Library/Preferences/com.jumpcloud.jcagent-tray.plist
 
 # Google Drive, Dropbox, Cloud storage
+/Library/Application Support/Google/DriveFS
 /Library/CloudStorage/
 /Google Drive
 /Dropbox
