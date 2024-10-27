@@ -31,3 +31,29 @@ rules:
       # Prefer braces around variable references
       - replace_pattern: '\$([a-zA-Z_][a-zA-Z0-9_]*)'
         replacement: '${$1}'
+
+  - name: Use heredocs for multiline strings
+    pattern: '.*\.(sh|bash)$'
+    rule: |
+      # Replace echo statements with multiple lines to heredocs
+      - replace_pattern: 'echo\s+"([^"]+(\n[^"]+)+)"'
+        replacement: |
+          cat <<EOF
+          $1
+          EOF
+
+      # Replace echo statements with single quotes and multiple lines to heredocs
+      - replace_pattern: "echo\\s+'([^']+(\\n[^']+)+)'"
+        replacement: |
+          cat <<'EOF'
+          $1
+          EOF
+
+      # Replace usage functions with heredocs
+      - replace_pattern: 'usage\(\)\s*{\s*(\s*echo\s+"[^"]+"(\s*echo\s+"[^"]+")*\s*)}'
+        replacement: |
+          usage() {
+            cat <<EOF
+          $1
+          EOF
+          }
