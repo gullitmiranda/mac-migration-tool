@@ -7,14 +7,19 @@ export LOG_LABEL="${LOG_LABEL:+${LOG_LABEL}:}sync-home"
 source "$(dirname "$0")/_utils.sh"
 source "$(dirname "$0")/../config/config.sh"
 
+# Check if required environment variables are set
+check_required_vars "OUTPUT_DIR" "CLI_NAME" "DEFAULT_SYNC_HOME_EXCLUDE_FILE"
+
 # Function to display usage
 usage() {
 	cat <<EOF
-Sync home folder to the new MacBook.
+Sync home folder to the destination MacBook.
 
 Usage: ${CLI_NAME} sync-home [OPTIONS]
 
 Options:
+  --host HOST               Specify the destination host (default: ${HOST_DEST})
+  --username USERNAME       Specify the username for sync (default: ${USERNAME})
   -x, --exclude-file FILE   Specify exclude file for rsync (default: ${DEFAULT_SYNC_HOME_EXCLUDE_FILE})
   -h, --help                Display this help message
 EOF
@@ -25,6 +30,14 @@ while [[ $# -gt 0 ]]; do
 	case $1 in
 	-x | --exclude-file)
 		EXCLUDE_FILE="$2"
+		shift 2
+		;;
+	--host)
+		HOST_DEST="$2"
+		shift 2
+		;;
+	--username)
+		USERNAME="$2"
 		shift 2
 		;;
 	-h | --help)
@@ -45,11 +58,14 @@ EXCLUDE_FILE="${EXCLUDE_FILE:-${DEFAULT_SYNC_HOME_EXCLUDE_FILE}}"
 # Create a log file for rsync output
 SYNC_HOME_LOG="${OUTPUT_DIR}/sync-home.log"
 
-# Check if required environment variables are set
-check_required_vars "NEW_MAC_IP" "USERNAME" "OUTPUT_DIR" "EXCLUDE_FILE"
+# Check if required options are set
+if ! check_required_options "--host HOST_DEST" "--username USERNAME" "--exclude-file EXCLUDE_FILE"; then
+	usage
+	exit 1
+fi
 
 log_info "Starting home folder sync process..."
-log_info "  - Target: ${USERNAME}@${NEW_MAC_IP}"
+log_info "  - Target: ${USERNAME}@${HOST_DEST}"
 log_info "  - Exclude file: ${EXCLUDE_FILE}"
 log_info "  - Sync log: ${SYNC_HOME_LOG}"
 
@@ -73,7 +89,7 @@ rsync_cmd+=" --exclude-from=\"${EXCLUDE_FILE}\""
 # Add options for better error handling and reporting
 rsync_cmd+=" --itemize-changes --stats"
 
-rsync_cmd+=" ~/ \"${USERNAME}@${NEW_MAC_IP}:~/\""
+rsync_cmd+=" ~/ \"${USERNAME}@${HOST_DEST}:~/\""
 
 if [[ ${DRY_RUN} == true ]]; then
 	log_info "Previewing sync operation..."
@@ -82,7 +98,7 @@ else
 	log_info "Starting sync operation..."
 fi
 
-log_warning "ATTENTION: Maybe you will be prompted to enter the password for ${USERNAME} on the new Mac."
+log_warning "ATTENTION: Maybe you will be prompted to enter the password for ${USERNAME} on the destination Mac."
 
 # Run the rsync command and capture the output and exit status
 log_verbose_run_command "${rsync_cmd} >${SYNC_HOME_LOG} 2>&1"

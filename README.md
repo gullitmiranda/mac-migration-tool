@@ -19,7 +19,7 @@ This tool is ideal for power users, developers, and anyone who wants more contro
 
 - Sync home folder
 - Analyze and filter sync logs
-- Export and install applications
+- Export and install applications using Homebrew
 - Migrate settings
 - Dry-run option for testing
 
@@ -92,8 +92,8 @@ Commands:
   sync-home           Sync home folder
   sync-analyze-log    Analyze sync log
   sync-filter-log     Filter sync log
-  apps-export         Export list of installed apps
-  apps-install        Install apps on the new MacBook
+  apps-brew-export    Export list of installed apps using Homebrew
+  apps-brew-install   Install apps on the new MacBook using Homebrew
 
 Common options:
   -o, --output-dir DIR      Specify output directory for artifacts
@@ -109,31 +109,31 @@ Use './mac-migrate.sh <command> --help' for more information about a specific co
 1. Sync home folder:
 
    ```bash
-   ./mac-migrate.sh sync-home --dry-run
+   ./mac-migrate.sh sync-home --host 192.168.1.100 --username johndoe --dry-run
    ```
 
 2. Analyze sync log:
 
    ```bash
-   ./mac-migrate.sh sync-analyze-log
+   ./mac-migrate.sh sync-analyze-log -i /path/to/sync.log
    ```
 
 3. Filter sync log:
 
    ```bash
-   ./mac-migrate.sh sync-filter-log
+   ./mac-migrate.sh sync-filter-log -i /path/to/sync.log -e /path/to/exclude.txt
    ```
 
 4. Export installed apps:
 
    ```bash
-   ./mac-migrate.sh apps-export
+   ./mac-migrate.sh apps-brew-export -f /path/to/Brewfile
    ```
 
 5. Install apps on the new Mac:
 
    ```bash
-   ./mac-migrate.sh apps-install
+   ./mac-migrate.sh apps-brew-install -f /path/to/Brewfile
    ```
 
 ## Recommended Migration Steps
@@ -149,7 +149,7 @@ Always back up your data before performing a migration. This tool comes with no 
 1. Perform a dry run of the home folder sync:
 
    ```bash
-   ./mac-migrate.sh sync-home --dry-run
+   ./mac-migrate.sh sync-home --host NEW_MAC_IP --username YOUR_USERNAME --dry-run
    ```
 
 2. Analyze the sync log to review what will be transferred:
@@ -166,7 +166,7 @@ Always back up your data before performing a migration. This tool comes with no 
 
 4. After reviewing and adjusting as needed, run the actual home folder sync:
    ```bash
-   ./mac-migrate.sh sync-home
+   ./mac-migrate.sh sync-home --host NEW_MAC_IP --username YOUR_USERNAME
    ```
 
 ### Applications Migration
@@ -174,14 +174,14 @@ Always back up your data before performing a migration. This tool comes with no 
 1. Export the list of installed applications on the old Mac:
 
    ```bash
-   ./mac-migrate.sh apps-export
+   ./mac-migrate.sh apps-brew-export
    ```
 
-2. Review the generated artifacts in the output directory to ensure the list is accurate.
+2. Review the generated Brewfile in the output directory to ensure the list is accurate.
 
 3. Install the exported applications on the new Mac:
    ```bash
-   ./mac-migrate.sh apps-install
+   ./mac-migrate.sh apps-brew-install -f /path/to/Brewfile
    ```
 
 By following these steps, you can ensure a thorough and controlled migration process, allowing you to review and adjust the migration at each stage.

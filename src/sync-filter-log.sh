@@ -7,6 +7,9 @@ export LOG_LABEL="${LOG_LABEL:+${LOG_LABEL}:}sync-filter-log"
 source "$(dirname "$0")/_utils.sh"
 source "$(dirname "$0")/../config/config.sh"
 
+# Check if required environment variables are set
+check_required_vars "DEFAULT_SYNC_HOME_LOG" "DEFAULT_SYNC_FILTER_EXCLUDE_FILE" "CLI_NAME"
+
 # Default values
 SYNC_LOG="${DEFAULT_SYNC_HOME_LOG}"
 EXCLUDE_FILE="${DEFAULT_SYNC_FILTER_EXCLUDE_FILE}"
@@ -19,21 +22,21 @@ Clean the sync log file by removing entries matching patterns in the exclude fil
 Usage: ${CLI_NAME} sync-filter-log [OPTIONS]
 
 Options:
-  -e, --exclude-file FILE   Specify exclude file for filtering (default: ${EXCLUDE_FILE})
-  -i, --input-log FILE      Specify input sync log file (default: ${SYNC_LOG})
-  -o, --output FILE         Specify output file for cleaned log (default: <input-file>-filtered.log)
-  -h, --help                Display this help message
+  -e, --exclude FILE    Specify exclude file for filtering (default: ${EXCLUDE_FILE})
+  -i, --input FILE      Specify input sync log file (default: ${SYNC_LOG})
+  -o, --output FILE     Specify output file for cleaned log (default: <input-file>-filtered.log)
+  -h, --help            Display this help message
 EOF
 }
 
 # Parse command-line arguments
 while [[ $# -gt 0 ]]; do
   case $1 in
-  -i | --input-log)
+  -i | --input)
     SYNC_LOG="$2"
     shift 2
     ;;
-  -e | --exclude-file)
+  -e | --exclude)
     EXCLUDE_FILE="$2"
     shift 2
     ;;
@@ -52,6 +55,12 @@ while [[ $# -gt 0 ]]; do
     ;;
   esac
 done
+
+# Check if required options are set
+if ! check_required_options "--input SYNC_LOG" "--exclude EXCLUDE_FILE"; then
+  usage
+  exit 1
+fi
 
 # Set SYNC_FILTER_LOG based on SYNC_LOG if not defined
 if [[ -z "${SYNC_FILTER_LOG}" ]]; then
