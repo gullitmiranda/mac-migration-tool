@@ -34,7 +34,7 @@ perform_sync() {
 	local partial="${5:-false}"
 	local sync_dir="${6-}" # New parameter for sync directory
 
-	local rsync_opts=(-avz --delete --progress)
+	local rsync_opts=(-avz --progress)
 
 	# Add exclude file if provided
 	if [[ -n ${exclude_file} ]] && [[ -f ${exclude_file} ]]; then
@@ -48,7 +48,6 @@ perform_sync() {
 		rsync_opts+=(
 			--partial-dir="${partial_dir}"
 			--partial
-			--append-verify
 		)
 	fi
 
