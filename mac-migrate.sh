@@ -112,7 +112,7 @@ sync-filter-log)
 	bash "${SCRIPT_DIR}/src/sync-filter-log.sh" "$@"
 	;;
 apps-brew-export)
-	source "${SCRIPT_DIR}/src/apps-brew-export.sh"
+	bash "${SCRIPT_DIR}/src/apps-brew-export.sh" "$@"
 	;;
 apps-brew-install)
 	source "${SCRIPT_DIR}/src/apps-brew-install.sh"
