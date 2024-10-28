@@ -90,8 +90,19 @@ export_domains() {
 
 	# Get domains based on context
 	if [[ ${context} == "system" ]]; then
+		# Get domains from main preferences directory
 		# trunk-ignore(shellcheck/SC2312)
 		sudo defaults domains /Library/Preferences | tr ',' '\n' | sed 's/^ *//' >"${domains_file}"
+
+		# Get domains from subdirectories
+		while IFS= read -r subdir; do
+			[[ -z ${subdir} ]] && continue
+			mkdir -p "${context_dir}/${subdir}"
+			# trunk-ignore(shellcheck/SC2312)
+			sudo defaults domains "/Library/Preferences/${subdir}" | tr ',' '\n' | sed 's/^ *//' |
+				sed "s|^|${subdir}/|" >>"${domains_file}"
+			# trunk-ignore(shellcheck/SC2312)
+		done < <(sudo find /Library/Preferences -type d -mindepth 1 -maxdepth 1 -exec basename {} \;)
 	else
 		# trunk-ignore(shellcheck/SC2312)
 		defaults domains | tr ',' '\n' | sed 's/^ *//' >"${domains_file}"

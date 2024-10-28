@@ -16,6 +16,9 @@ rules:
       # Preserve indentation
       - preserve_indentation: true
 
+      # Preserve comments (including lint ignores)
+      - preserve_pattern: '#.*'
+
   - name: Preserve shell script syntax
     pattern: '.*\.(sh|bash)$'
     rule: |
