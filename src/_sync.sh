@@ -47,14 +47,14 @@ perform_sync() {
 		-avz            # archive, verbose, compress
 		--progress      # show progress
 		--ignore-errors # skip files with errors
+		# --super         # receive attempts to super-user activities
 	)
 
-	# Add sync directory to exclusions if provided
+	# Add the root of the sync directory to exclusions if provided
 	if [[ -n ${sync_dir} ]]; then
 		# Get relative path by removing source_path prefix
 		local rel_sync_dir
-		# trunk-ignore(shellcheck/SC2001)
-		rel_sync_dir=$(echo "${sync_dir}" | sed "s|^${source_path}/||")
+		rel_sync_dir=$(dirname "${sync_dir}" | sed "s|^${source_path}/||")
 		rsync_opts+=(--exclude="${rel_sync_dir}/") # Exclude the sync directory
 	fi
 
@@ -269,7 +269,8 @@ resume_sync() {
 	local resume_log="${sync_dir}/${file_basename}_resume_${timestamp}.log"
 
 	log_info "Resuming interrupted sync..."
-	if perform_sync "${source_path}" "${dest_path}" "${resume_log}" "${exclude_file}" "true" "${sync_dir}"; then
+	log_debug "Resume log: ${resume_log}"
+	if perform_sync "${source_path}" "${dest_path}" "${resume_log}" "${exclude_file}" "true" "${sync_dir}" "${sync_list_file}"; then
 		# Clean up partial directory if sync was successful
 		local partial_dir="${sync_dir}/partial"
 		if [[ -d ${partial_dir} ]]; then
