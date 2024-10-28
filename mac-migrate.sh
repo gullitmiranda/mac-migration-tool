@@ -49,6 +49,7 @@ Commands:
   sync-filter-log            Filter sync log
   apps-brew-export           Export list of installed apps
   apps-brew-install          Install apps on the new MacBook
+  settings-export            Export macOS system and user preferences
 
 Global options:
 $(usage_global_options || true)
@@ -118,6 +119,9 @@ apps-brew-install)
 	source "${SCRIPT_DIR}/src/apps-brew-install.sh"
 	;;
 # For now this is a hidden command
+settings-export)
+	bash "${SCRIPT_DIR}/src/settings-export.sh" "$@"
+	;;
 settings-migrate)
 	bash "${SCRIPT_DIR}/src/settings-migrate.sh" "$@"
 	;;
