@@ -50,8 +50,10 @@ perform_sync() {
 
 	# Add sync directory to exclusions if provided
 	if [[ -n ${sync_dir} ]]; then
+		# Get relative path by removing source_path prefix
 		local rel_sync_dir
-		rel_sync_dir=$(realpath --relative-to="${source_path}" "${sync_dir}")
+		# trunk-ignore(shellcheck/SC2001)
+		rel_sync_dir=$(echo "${sync_dir}" | sed "s|^${source_path}/||")
 		rsync_opts+=(--exclude="${rel_sync_dir}/") # Exclude the sync directory
 	fi
 
@@ -75,11 +77,15 @@ perform_sync() {
 	fi
 
 	# Handle both files and directories
+	local rsync_cmd
 	if [[ -d ${source_path} ]]; then
-		rsync "${rsync_opts[@]}" "${source_path}/" "${dest_path}/" >"${output_file}" 2>&1
+		rsync_cmd=(rsync "${rsync_opts[@]}" "${source_path}/" "${dest_path}/")
 	else
-		rsync "${rsync_opts[@]}" "${source_path}" "${dest_path}" >"${output_file}" 2>&1
+		rsync_cmd=(rsync "${rsync_opts[@]}" "${source_path}" "${dest_path}")
 	fi
+
+	log_debug "Running: ${rsync_cmd[*]}"
+	"${rsync_cmd[@]}" >"${output_file}" 2>&1
 }
 
 # Function to get the latest sync files for a sync type
