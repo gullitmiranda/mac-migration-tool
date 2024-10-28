@@ -40,6 +40,7 @@ perform_sync() {
 	local exclude_file="${4-}"
 	local partial="${5:-true}"
 	local sync_dir="${6-}"
+	local sync_list_file="${7-}" # Add sync list file as a parameter
 
 	# Base rsync options with safer defaults
 	local rsync_opts=(
@@ -74,6 +75,11 @@ perform_sync() {
 			--partial
 			--timeout=180 # set timeout to 3 minutes
 		)
+	fi
+
+	# Use the sync list file if provided
+	if [[ -n ${sync_list_file} ]] && [[ -f ${sync_list_file} ]]; then
+		rsync_opts+=(--files-from="${sync_list_file}")
 	fi
 
 	# Handle both files and directories
@@ -231,7 +237,7 @@ sync_directory() {
 	log_info "Starting sync..."
 	log_debug "Sync log: ${log_file}"
 
-	if perform_sync "${source_path}" "${dest_path}" "${log_file}" "${exclude_file}" "${partial}" "${sync_dir}"; then
+	if perform_sync "${source_path}" "${dest_path}" "${log_file}" "${exclude_file}" "${partial}" "${sync_dir}" "${sync_list_file}"; then
 		log_info "Sync completed successfully"
 		log_info "Log file: ${log_file}"
 		return 0
