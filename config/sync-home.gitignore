@@ -25,7 +25,7 @@
 
 # iCloud syncronization files
 /Library/Accessibility/
-/Library/Accounts
+# /Library/Accounts
 /Library/AppleMediaServices
 /Library/Application Support/AddressBook
 /Library/Application Support/CallHistoryDB
@@ -60,7 +60,7 @@
 /Library/Containers/com.apple.Maps/Data/Maps
 /Library/Containers/com.apple.MobileSMS
 /Library/Containers/com.apple.Notes
-/Library/Containers/com.apple.Safari
+# /Library/Containers/com.apple.Safari
 /Library/Containers/com.apple.stocks
 /Library/Cookies
 /Library/CoreFollowUp
@@ -108,7 +108,7 @@
 /Library/Photos/Libraries/Syndication.photoslibrary
 /Library/Preferences/com.apple.CloudKit.plist
 /Library/Preferences/com.apple.iCloud.plist
-/Library/Preferences/MobileMeAccounts.plist
+# /Library/Preferences/MobileMeAccounts.plist
 /Library/Reminders
 /Library/Safari
 /Library/Sharing
@@ -117,6 +117,8 @@
 /Library/Suggestions
 /Library/Trial
 /Library/Weather
+/Library/studentd/
+/Library/Saved Application State/com.apple.Terminal.savedState/
 
 # JumpCloud files
 /Library/Application Support/JumpCloud-Remote-Assist
@@ -165,3 +167,6 @@
 /cw_sql_proxy/
 /.swiftpm/
 /.local/var/log/
+/mac-migrate/
+
+# Failures
